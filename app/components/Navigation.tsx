@@ -44,6 +44,15 @@ export default function Navigation() {
           }}>
             Stake
           </Link>
+          <Link href="/monitor" style={{ 
+            color: '#4b5563', 
+            textDecoration: 'none',
+            padding: '0.5rem 1rem',
+            borderRadius: '6px',
+            transition: 'background 0.2s'
+          }}>
+            Monitor
+          </Link>
         </div>
       </div>
       

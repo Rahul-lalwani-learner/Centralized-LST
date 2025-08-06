@@ -50,18 +50,45 @@ export default function LST(){
             const signedTransaction = await wallet.signTransaction(transaction);
             const signature = await connection.sendRawTransaction(signedTransaction.serialize());
             
-            // Confirm transaction
-            await connection.confirmTransaction(signature, 'confirmed');
-
-            setMessage(`Successfully staked ${amount} SOL! Transaction: ${signature.slice(0, 8)}...`);
-            setAmount('');
+            console.log('Transaction sent with signature:', signature);
+            setMessage(`Transaction sent! Signature: ${signature.slice(0, 8)}... Confirming...`);
             
-            // You could also call your backend here to immediately process the transaction
-            // instead of waiting for the webhook
+            // Confirm transaction with longer timeout and better error handling
+            try {
+                await connection.confirmTransaction({
+                    signature,
+                    blockhash,
+                    lastValidBlockHeight: (await connection.getLatestBlockhash()).lastValidBlockHeight
+                }, 'confirmed');
+                
+                setMessage(`Successfully staked ${amount} SOL! Transaction: ${signature.slice(0, 8)}...`);
+                setAmount('');
+                
+                // Optional: Immediately call your webhook to process the transaction
+                // instead of waiting for Helius webhook
+                console.log('Transaction confirmed. RSOL tokens should be minted automatically via webhook.');
+                
+            } catch (confirmError) {
+                console.warn('Transaction confirmation timeout, but transaction may still succeed:', confirmError);
+                setMessage(`Transaction sent (${signature.slice(0, 8)}...) but confirmation timed out. Check your wallet for RSOL tokens in a few minutes.`);
+                setAmount('');
+            }
             
         } catch (error) {
             console.error('Staking error:', error);
-            setMessage('Staking failed. Please try again.');
+            if (error instanceof Error) {
+                if (error.message.includes('User rejected')) {
+                    setMessage('Transaction was cancelled.');
+                } else if (error.message.includes('insufficient funds')) {
+                    setMessage('Insufficient SOL balance for this transaction.');
+                } else if (error.message.includes('expired') || error.message.includes('timeout')) {
+                    setMessage('Transaction timed out, but may still succeed. Check your wallet for updates.');
+                } else {
+                    setMessage(`Staking failed: ${error.message}`);
+                }
+            } else {
+                setMessage('Staking failed. Please try again.');
+            }
         } finally {
             setIsStaking(false);
         }

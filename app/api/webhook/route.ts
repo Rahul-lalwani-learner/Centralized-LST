@@ -4,6 +4,7 @@ import {
   getOrCreateAssociatedTokenAccount, 
   mintTo
 } from '@solana/spl-token';
+import { addWebhookEvent } from '../../lib/webhookStore';
 
 // Webhook data interfaces
 interface AccountData {
@@ -45,36 +46,69 @@ interface TransactionLog {
 }
 
 export async function POST(request: NextRequest) {
+  const startTime = Date.now();
+  const requestId = Math.random().toString(36).substring(7);
+  
+  console.log(`\n🚀 [${requestId}] Webhook POST request received at ${new Date().toISOString()}`);
+  console.log(`📡 [${requestId}] Request URL: ${request.url}`);
+  console.log(`🌐 [${requestId}] Request headers:`, Object.fromEntries(request.headers.entries()));
+  
+  // Log incoming webhook event
+  addWebhookEvent({
+    id: `incoming-${requestId}`,
+    timestamp: new Date().toISOString(),
+    type: 'incoming',
+    data: { url: request.url, headers: Object.fromEntries(request.headers.entries()) },
+    requestId
+  });
+  
   try {
     // Validate that we have the required environment variables
     if (!process.env.WALLET_PUBLIC_KEY || !process.env.WALLET_PRIVATE_KEY || !process.env.TOKEN_MINT_ADDRESS) {
-      console.error('Missing required environment variables');
+      console.error(`❌ [${requestId}] Missing required environment variables`);
       return NextResponse.json({ 
         success: false, 
-        error: 'Server configuration error' 
+        error: 'Server configuration error',
+        requestId 
       }, { status: 500 });
     }
 
     const body: WebhookData[] = await request.json();
-    console.log('Received webhook:', JSON.stringify(body, null, 2));
+    console.log(`📦 [${requestId}] Received webhook data:`, JSON.stringify(body, null, 2));
+    console.log(`📊 [${requestId}] Number of transactions: ${body.length}`);
+
+    // Log processing start
+    addWebhookEvent({
+      id: `processing-${requestId}`,
+      timestamp: new Date().toISOString(),
+      type: 'processing',
+      data: { transactionCount: body.length, transactions: body },
+      requestId
+    });
 
     // Validate webhook data structure
     if (!Array.isArray(body) || body.length === 0) {
-      console.error('Invalid webhook data: not an array or empty');
+      console.error(`❌ [${requestId}] Invalid webhook data: not an array or empty`);
       return NextResponse.json({ 
         success: false, 
-        error: 'Invalid webhook data format' 
+        error: 'Invalid webhook data format',
+        requestId 
       }, { status: 400 });
     }
 
     // Process each transaction in the webhook
     const results = [];
-    for (const transaction of body) {
+    for (let i = 0; i < body.length; i++) {
+      const transaction = body[i];
+      console.log(`\n🔄 [${requestId}] Processing transaction ${i + 1}/${body.length}`);
+      console.log(`📋 [${requestId}] Transaction signature: ${transaction.signature}`);
+      
       try {
-        const result = await processTransaction(transaction);
+        const result = await processTransaction(transaction, requestId);
         results.push(result);
+        console.log(`✅ [${requestId}] Transaction ${i + 1} processed successfully:`, result);
       } catch (error) {
-        console.error('Error processing individual transaction:', error);
+        console.error(`❌ [${requestId}] Error processing transaction ${i + 1}:`, error);
         results.push({ 
           success: false, 
           signature: transaction.signature,
@@ -83,23 +117,59 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    const endTime = Date.now();
+    const processingTime = endTime - startTime;
+    
+    console.log(`\n🎉 [${requestId}] Webhook processing completed in ${processingTime}ms`);
+    console.log(`📈 [${requestId}] Final results:`, results);
+
+    // Log successful completion
+    addWebhookEvent({
+      id: `completed-${requestId}`,
+      timestamp: new Date().toISOString(),
+      type: 'completed',
+      data: { results, processedTransactions: results.length },
+      requestId,
+      processingTime
+    });
+
     return NextResponse.json({ 
       success: true, 
       message: 'Webhook processed successfully',
       processedTransactions: results.length,
-      results
+      results,
+      requestId,
+      processingTimeMs: processingTime
     });
   } catch (error) {
-    console.error('Webhook processing error:', error);
+    const endTime = Date.now();
+    const processingTime = endTime - startTime;
+    
+    console.error(`💥 [${requestId}] Webhook processing error after ${processingTime}ms:`, error);
+    
+    // Log error event
+    addWebhookEvent({
+      id: `error-${requestId}`,
+      timestamp: new Date().toISOString(),
+      type: 'error',
+      data: { error: error instanceof Error ? error.message : 'Unknown error' },
+      requestId,
+      processingTime,
+      error: error instanceof Error ? error.message : 'Unknown error'
+    });
     return NextResponse.json({ 
       success: false, 
-      error: error instanceof Error ? error.message : 'Failed to process webhook'
+      error: error instanceof Error ? error.message : 'Failed to process webhook',
+      requestId,
+      processingTimeMs: processingTime
     }, { status: 500 });
   }
 }
 
-async function processTransaction(transaction: WebhookData) {
+async function processTransaction(transaction: WebhookData, requestId: string) {
   const targetWallet = process.env.WALLET_PUBLIC_KEY;
+  
+  console.log(`🔍 [${requestId}] Processing transaction for wallet: ${targetWallet}`);
   
   if (!targetWallet) {
     throw new Error('WALLET_PUBLIC_KEY not found in environment variables');
@@ -107,9 +177,14 @@ async function processTransaction(transaction: WebhookData) {
 
   // Validate transaction structure
   if (!transaction.nativeTransfers || !Array.isArray(transaction.nativeTransfers)) {
-    console.log('Transaction has no native transfers');
+    console.log(`⚠️ [${requestId}] Transaction has no native transfers`);
     return { success: false, reason: 'No native transfers' };
   }
+
+  console.log(`📊 [${requestId}] Found ${transaction.nativeTransfers.length} native transfers`);
+  transaction.nativeTransfers.forEach((transfer, index) => {
+    console.log(`   Transfer ${index + 1}: ${transfer.fromUserAccount} → ${transfer.toUserAccount} (${transfer.amount / 1e9} SOL)`);
+  });
 
   // Check if this transaction involves our wallet receiving SOL
   const relevantTransfer = transaction.nativeTransfers.find(
@@ -117,17 +192,19 @@ async function processTransaction(transaction: WebhookData) {
   );
 
   if (!relevantTransfer) {
-    console.log('Transaction does not involve SOL transfer to our wallet');
+    console.log(`⚠️ [${requestId}] Transaction does not involve SOL transfer to our wallet`);
     return { success: false, reason: 'Not relevant to our wallet' };
   }
 
-  console.log(`Processing SOL transfer of ${relevantTransfer.amount / 1e9} SOL to our wallet`);
+  console.log(`✅ [${requestId}] Processing SOL transfer of ${relevantTransfer.amount / 1e9} SOL to our wallet`);
+  console.log(`👤 [${requestId}] Sender: ${relevantTransfer.fromUserAccount}`);
 
   // Mint equivalent RSOL tokens to the sender
   const mintResult = await mintRSOLTokens(
     relevantTransfer.fromUserAccount,
     relevantTransfer.amount,
-    transaction.signature
+    transaction.signature,
+    requestId
   );
 
   return {
@@ -138,8 +215,10 @@ async function processTransaction(transaction: WebhookData) {
   };
 }
 
-async function mintRSOLTokens(recipientAddress: string, solAmount: number, txSignature: string) {
+async function mintRSOLTokens(recipientAddress: string, solAmount: number, txSignature: string, requestId: string) {
   try {
+    console.log(`🪙 [${requestId}] Starting RSOL token minting process`);
+    
     const connection = new Connection(
       process.env.NEXT_PUBLIC_ALCHEMY_DEVNET_ENDPOINT || '',
       'confirmed'
@@ -157,12 +236,14 @@ async function mintRSOLTokens(recipientAddress: string, solAmount: number, txSig
     const mintAddress = new PublicKey(process.env.TOKEN_MINT_ADDRESS || '');
     const recipientPublicKey = new PublicKey(recipientAddress);
 
-    console.log('Minting RSOL tokens...');
-    console.log('Mint address:', mintAddress.toString());
-    console.log('Recipient:', recipientAddress);
-    console.log('Amount (lamports):', solAmount);
+    console.log(`🔧 [${requestId}] Minting configuration:`);
+    console.log(`   Mint address: ${mintAddress.toString()}`);
+    console.log(`   Recipient: ${recipientAddress}`);
+    console.log(`   SOL Amount (lamports): ${solAmount}`);
+    console.log(`   SOL Amount (SOL): ${solAmount / 1e9}`);
 
     // Get or create associated token account for the recipient
+    console.log(`🔍 [${requestId}] Getting or creating associated token account...`);
     const recipientTokenAccount = await getOrCreateAssociatedTokenAccount(
       connection,
       wallet,
@@ -170,12 +251,13 @@ async function mintRSOLTokens(recipientAddress: string, solAmount: number, txSig
       recipientPublicKey
     );
 
-    console.log('Recipient token account:', recipientTokenAccount.address.toString());
+    console.log(`✅ [${requestId}] Recipient token account: ${recipientTokenAccount.address.toString()}`);
 
     // Mint tokens (1:1 ratio with SOL, but in token decimals)
     // Assuming your token has 9 decimals like SOL
     const tokensToMint = solAmount; // 1:1 ratio
 
+    console.log(`⚡ [${requestId}] Minting ${tokensToMint / 1e9} RSOL tokens...`);
     const mintTx = await mintTo(
       connection,
       wallet,
@@ -185,8 +267,25 @@ async function mintRSOLTokens(recipientAddress: string, solAmount: number, txSig
       tokensToMint
     );
 
-    console.log(`Successfully minted ${tokensToMint / 1e9} RSOL tokens`);
-    console.log('Mint transaction:', mintTx);
+    console.log(`🎉 [${requestId}] Successfully minted ${tokensToMint / 1e9} RSOL tokens`);
+    console.log(`📝 [${requestId}] Mint transaction signature: ${mintTx}`);
+
+    // Log successful minting
+    addWebhookEvent({
+      id: `mint-${requestId}-${Date.now()}`,
+      timestamp: new Date().toISOString(),
+      type: 'completed',
+      data: { 
+        action: 'mint_tokens',
+        tokensToMint: tokensToMint / 1e9,
+        recipientTokenAccount: recipientTokenAccount.address.toString()
+      },
+      requestId,
+      signature: txSignature,
+      amount: solAmount,
+      recipient: recipientAddress,
+      mintTx
+    });
 
     // Log the transaction for tracking
     await logTransaction({
@@ -196,20 +295,20 @@ async function mintRSOLTokens(recipientAddress: string, solAmount: number, txSig
       solAmount,
       rsolAmount: tokensToMint,
       timestamp: new Date().toISOString()
-    });
+    }, requestId);
 
     return mintTx;
 
   } catch (error) {
-    console.error('Error minting RSOL tokens:', error);
+    console.error(`💥 [${requestId}] Error minting RSOL tokens:`, error);
     throw error;
   }
 }
 
-async function logTransaction(transactionData: TransactionLog) {
+async function logTransaction(transactionData: TransactionLog, requestId: string) {
   // For now, just log to console
   // In production, you'd want to store this in a database
-  console.log('Transaction logged:', transactionData);
+  console.log(`📋 [${requestId}] Transaction logged:`, transactionData);
   
   // You can implement database storage here
   // For example, using Prisma, MongoDB, or any other database
@@ -217,8 +316,17 @@ async function logTransaction(transactionData: TransactionLog) {
 
 // Health check endpoint
 export async function GET() {
+  const timestamp = new Date().toISOString();
+  console.log(`🏥 Health check requested at ${timestamp}`);
+  
   return NextResponse.json({ 
     status: 'Webhook endpoint is running',
-    timestamp: new Date().toISOString()
+    timestamp,
+    environment: {
+      hasWalletPublicKey: !!process.env.WALLET_PUBLIC_KEY,
+      hasWalletPrivateKey: !!process.env.WALLET_PRIVATE_KEY,
+      hasTokenMintAddress: !!process.env.TOKEN_MINT_ADDRESS,
+      hasAlchemyEndpoint: !!process.env.NEXT_PUBLIC_ALCHEMY_DEVNET_ENDPOINT
+    }
   });
 }
