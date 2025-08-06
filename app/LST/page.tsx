@@ -32,9 +32,21 @@ export default function LST(){
 
     // Handle ratio changes from the SOL_to_RSOL component
     const handleRatioChange = (ratio: number, rsolAmount: number) => {
+        console.log(`🔧 Ratio changed: ${ratio.toFixed(3)}x, RSOL Amount: ${rsolAmount.toFixed(6)}`);
         setCurrentRatio(ratio);
         setExpectedRSOL(rsolAmount);
     };
+
+    // Update expected RSOL when amount changes
+    useEffect(() => {
+        if (parseFloat(amount) > 0) {
+            const newExpectedRSOL = parseFloat(amount) * currentRatio;
+            console.log(`📊 Amount changed: ${amount} SOL × ${currentRatio.toFixed(3)} = ${newExpectedRSOL.toFixed(6)} RSOL`);
+            setExpectedRSOL(newExpectedRSOL);
+        } else {
+            setExpectedRSOL(0);
+        }
+    }, [amount, currentRatio]);
 
     // Poll for webhook events to detect when RSOL tokens are minted
     useEffect(() => {
@@ -54,7 +66,14 @@ export default function LST(){
                     );
                     
                     if (mintEvent) {
-                        setMessage(`🎉 Success! ${expectedRSOL.toFixed(4)} RSOL tokens have been minted to your wallet at ${currentRatio.toFixed(2)}x ratio! Mint TX: ${mintEvent.mintTx!.slice(0, 8)}...`);
+                        // Calculate the actual RSOL amount from the mint event data or use expected
+                        const actualRSOL = mintEvent.data && typeof mintEvent.data === 'object' && 'tokensToMint' in mintEvent.data 
+                            ? (mintEvent.data as { tokensToMint: number }).tokensToMint 
+                            : expectedRSOL;
+                        
+                        console.log(`🎉 Mint success detected! Expected: ${expectedRSOL.toFixed(6)}, Actual: ${actualRSOL}`);
+                        
+                        setMessage(`🎉 Success! ${actualRSOL.toFixed(6)} RSOL tokens have been minted to your wallet at ${currentRatio.toFixed(3)}x ratio! Mint TX: ${mintEvent.mintTx!.slice(0, 8)}...`);
                         setPendingTxSignature(null);
                         return;
                     }
@@ -110,6 +129,7 @@ export default function LST(){
         try {
             // Store the stake request with ratio before sending transaction
             console.log(`📋 Storing stake request: ${wallet.publicKey.toString()}, ratio: ${currentRatio.toFixed(3)}, amount: ${parseFloat(amount)}`);
+            console.log(`📊 Expected RSOL calculation: ${parseFloat(amount)} SOL × ${currentRatio.toFixed(3)} = ${expectedRSOL.toFixed(6)} RSOL`);
             
             const stakeResponse = await fetch('/api/stake-request', {
                 method: 'POST',
@@ -158,7 +178,8 @@ export default function LST(){
             
             // Show minting message immediately and start polling
             setTimeout(() => {
-                setMessage(`🪙 Minting ${expectedRSOL.toFixed(4)} RSOL tokens at ${currentRatio.toFixed(2)}x ratio for you... This may take a few moments.`);
+                console.log(`🪙 About to show minting message. Expected RSOL: ${expectedRSOL.toFixed(6)}, Ratio: ${currentRatio.toFixed(3)}`);
+                setMessage(`🪙 Minting ${expectedRSOL.toFixed(6)} RSOL tokens at ${currentRatio.toFixed(3)}x ratio for you... This may take a few moments.`);
                 setPendingTxSignature(signature); // Start polling for webhook events
             }, 2000);
             
@@ -242,7 +263,7 @@ export default function LST(){
                                         : 'bg-indigo-500 hover:bg-indigo-600 cursor-pointer'
                                 }`}
                             >
-                                {isStaking ? 'Staking...' : `Stake ${amount || '0'} SOL → Get ${expectedRSOL.toFixed(4)} RSOL`}
+                                {isStaking ? 'Staking...' : `Stake ${amount || '0'} SOL → Get ${expectedRSOL.toFixed(6)} RSOL (${currentRatio.toFixed(3)}x)`}
                             </button>
                         </form>
                         
