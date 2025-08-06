@@ -5,65 +5,30 @@ import Link from 'next/link';
 
 export default function Navigation() {
   return (
-    <nav style={{
-      display: 'flex',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      padding: '1rem 2rem',
-      background: '#ffffff',
-      borderBottom: '1px solid #e5e7eb',
-      position: 'sticky',
-      top: 0,
-      zIndex: 10
-    }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '2rem' }}>
-        <Link href="/" style={{ 
-          fontSize: '1.5rem', 
-          fontWeight: 'bold', 
-          color: '#6366f1',
-          textDecoration: 'none'
-        }}>
+    <nav className="flex md:flex-row flex-col justify-between items-center px-8 py-4 bg-white border-b border-gray-200 sticky top-0 z-10">
+      <div className="flex items-center gap-8">
+        <Link
+          href="/"
+          className="text-2xl font-bold text-indigo-500 no-underline"
+        >
           RSOL Platform
         </Link>
-        <div style={{ display: 'flex', gap: '1rem' }}>
-          <Link href="/" style={{ 
-            color: '#4b5563', 
-            textDecoration: 'none',
-            padding: '0.5rem 1rem',
-            borderRadius: '6px',
-            transition: 'background 0.2s'
-          }}>
+        <div className="flex gap-4">
+          <Link
+            href="/"
+            className="text-gray-700 no-underline px-4 py-2 rounded-md transition-colors hover:bg-gray-100"
+          >
             Home
           </Link>
-          <Link href="/LST" style={{ 
-            color: '#4b5563', 
-            textDecoration: 'none',
-            padding: '0.5rem 1rem',
-            borderRadius: '6px',
-            transition: 'background 0.2s'
-          }}>
+          <Link
+            href="/LST"
+            className="text-gray-700 no-underline px-4 py-2 rounded-md transition-colors hover:bg-gray-100"
+          >
             Stake
-          </Link>
-          <Link href="/monitor" style={{ 
-            color: '#4b5563', 
-            textDecoration: 'none',
-            padding: '0.5rem 1rem',
-            borderRadius: '6px',
-            transition: 'background 0.2s'
-          }}>
-            Monitor
           </Link>
         </div>
       </div>
-      
-      <WalletMultiButton style={{
-        background: '#6366f1',
-        border: 'none',
-        borderRadius: '6px',
-        padding: '0.5rem 1rem',
-        color: 'white',
-        cursor: 'pointer'
-      }} />
+      <WalletMultiButton className="bg-indigo-500 border-none rounded-md px-4 py-2 text-white cursor-pointer" />
     </nav>
   );
 }

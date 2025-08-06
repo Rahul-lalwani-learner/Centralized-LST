@@ -68,11 +68,6 @@ NEXT_PUBLIC_BASE_URL=http://localhost:3000
 - **Function**: Processes SOL transfers and mints RSOL tokens
 - **Authentication**: None (webhook endpoint)
 
-### `/api/test-webhook` (POST)
-- **Purpose**: Test webhook functionality with static data
-- **Function**: Sends sample webhook data to the main webhook endpoint
-- **Usage**: For development and testing
-
 ## Webhook Setup
 
 To set up the Helius webhook:
@@ -101,8 +96,8 @@ The webhook expects data in this format:
 ## Development Workflow
 
 1. **Local Testing**:
-   - Use the test webhook endpoint to simulate transactions
    - Test with devnet SOL and tokens
+   - Use browser console to monitor webhook events
 
 2. **Wallet Integration**:
    - Connect Phantom or Solflare wallet
@@ -136,15 +131,14 @@ The webhook expects data in this format:
 
 ## Testing
 
-1. **Test Webhook**:
-   ```bash
-   curl -X POST http://localhost:3000/api/test-webhook
-   ```
-
-2. **Test Staking**:
+1. **Test Staking**:
    - Connect wallet on `/LST` page
    - Stake small amount of devnet SOL
    - Check for RSOL tokens in wallet
+
+2. **Verify Webhook**:
+   - Monitor browser console for webhook events
+   - Check transaction signatures on Solana explorer
 
 ## Troubleshooting
 

@@ -22,13 +22,6 @@ export default function Home() {
             >
               Start Staking
             </Link>
-            <Link 
-              href="/api/test-webhook"
-              target="_blank"
-              className="border-2 border-indigo-600 text-indigo-600 px-8 py-3 rounded-lg text-lg font-semibold hover:bg-indigo-50 transition-colors"
-            >
-              Test Webhook
-            </Link>
           </div>
         </div>
 
@@ -119,12 +112,12 @@ export default function Home() {
             </div>
             
             <div>
-              <h3 className="text-lg font-semibold mb-4">API Endpoints</h3>
+              <h3 className="text-lg font-semibold mb-4">Platform Features</h3>
               <ul className="space-y-2 text-gray-600">
-                <li>• <code className="bg-white px-2 py-1 rounded">/api/webhook</code> - Helius webhook handler</li>
-                <li>• <code className="bg-white px-2 py-1 rounded">/api/test-webhook</code> - Test webhook with static data</li>
-                <li>• Devnet only for testing and development</li>
-                <li>• Automatic error handling and logging</li>
+                <li>• Secure wallet-to-wallet SOL transfers</li>
+                <li>• Instant RSOL token distribution</li>
+                <li>• Built on Solana devnet for safe testing</li>
+                <li>• Comprehensive transaction tracking</li>
               </ul>
             </div>
           </div>

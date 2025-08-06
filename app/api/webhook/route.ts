@@ -5,8 +5,7 @@ import {
   getAccount,
   createAssociatedTokenAccountInstruction,
   createMintToInstruction,
-  TOKEN_PROGRAM_ID,
-  ASSOCIATED_TOKEN_PROGRAM_ID
+  TOKEN_2022_PROGRAM_ID
 } from '@solana/spl-token';
 import { addWebhookEvent } from '../../lib/webhookStore';
 import { decode as bs58Decode } from 'bs58';
@@ -299,8 +298,7 @@ async function mintRSOLTokens(recipientAddress: string, solAmount: number, txSig
         recipientTokenAddress, // associatedToken
         recipientPublicKey, // owner
         mintAddress, // mint
-        TOKEN_PROGRAM_ID,
-        ASSOCIATED_TOKEN_PROGRAM_ID
+        TOKEN_2022_PROGRAM_ID
       );
       transaction.add(createAccountInstruction);
     }
