@@ -32,6 +32,12 @@ export default function Home() {
               >
                 Start Staking →
               </Link>
+              <Link 
+                href="/unstake"
+                className="bg-gradient-to-r from-orange-600 to-red-600 text-white px-10 py-4 rounded-xl text-lg font-semibold hover:from-orange-700 hover:to-red-700 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1"
+              >
+                Unstake RSOL →
+              </Link>
               <div className="text-sm text-gray-500">
                 No minimum • Instant liquidity • Flexible ratios
               </div>
@@ -59,7 +65,7 @@ export default function Home() {
         </div>
 
         {/* Features */}
-        <div className="grid md:grid-cols-3 gap-8 mb-20">
+        <div className="grid md:grid-cols-4 gap-8 mb-20">
           <div className="bg-white/80 backdrop-blur-sm p-8 rounded-2xl shadow-lg border border-white/20 hover:shadow-xl transition-all duration-300 group">
             <div className="w-16 h-16 bg-gradient-to-r from-green-400 to-green-600 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
               <span className="text-2xl">⚡</span>
@@ -95,6 +101,18 @@ export default function Home() {
               Our webhook system automatically detects your SOL deposits and mints RSOL tokens using your selected ratio.
             </p>
           </div>
+
+          <div className="bg-white/80 backdrop-blur-sm p-8 rounded-2xl shadow-lg border border-white/20 hover:shadow-xl transition-all duration-300 group">
+            <div className="w-16 h-16 bg-gradient-to-r from-orange-400 to-red-600 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+              <span className="text-2xl">🔥</span>
+            </div>
+            <h3 className="text-xl font-bold mb-4 text-gray-900">
+              Easy Unstaking
+            </h3>
+            <p className="text-gray-600 leading-relaxed">
+              Convert your RSOL back to SOL anytime. Burn RSOL tokens and receive SOL based on your selected unstaking ratio.
+            </p>
+          </div>
         </div>
 
         {/* How it Works */}
@@ -103,51 +121,108 @@ export default function Home() {
             How It Works
           </h2>
           <p className="text-center text-gray-600 mb-12 max-w-2xl mx-auto">
-            Stake your SOL in just a few simple steps and start earning rewards immediately
+            Stake your SOL or unstake your RSOL in just a few simple steps
           </p>
           
-          <div className="grid md:grid-cols-4 gap-8">
-            <div className="text-center group">
-              <div className="relative mb-6">
-                <div className="w-20 h-20 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-2xl flex items-center justify-center mx-auto shadow-lg group-hover:shadow-xl transition-all group-hover:scale-110">
-                  <span className="text-2xl text-white font-bold">1</span>
+          {/* Staking Process */}
+          <div className="mb-16">
+            <h3 className="text-2xl font-bold text-center mb-8 text-gray-900 bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+              Staking Process
+            </h3>
+            <div className="grid md:grid-cols-4 gap-8">
+              <div className="text-center group">
+                <div className="relative mb-6">
+                  <div className="w-20 h-20 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-2xl flex items-center justify-center mx-auto shadow-lg group-hover:shadow-xl transition-all group-hover:scale-110">
+                    <span className="text-2xl text-white font-bold">1</span>
+                  </div>
+                  <div className="absolute top-10 left-20 w-16 h-0.5 bg-gradient-to-r from-indigo-300 to-purple-300 hidden md:block"></div>
                 </div>
-                <div className="absolute top-10 left-20 w-16 h-0.5 bg-gradient-to-r from-indigo-300 to-purple-300 hidden md:block"></div>
+                <h4 className="font-bold mb-3 text-gray-900">Connect Wallet</h4>
+                <p className="text-sm text-gray-600 leading-relaxed">Connect your Solana wallet using Phantom, Solflare, or any supported wallet</p>
               </div>
-              <h4 className="font-bold mb-3 text-gray-900">Connect Wallet</h4>
-              <p className="text-sm text-gray-600 leading-relaxed">Connect your Solana wallet using Phantom, Solflare, or any supported wallet</p>
+              
+              <div className="text-center group">
+                <div className="relative mb-6">
+                  <div className="w-20 h-20 bg-gradient-to-r from-green-500 to-emerald-600 rounded-2xl flex items-center justify-center mx-auto shadow-lg group-hover:shadow-xl transition-all group-hover:scale-110">
+                    <span className="text-2xl text-white font-bold">2</span>
+                  </div>
+                  <div className="absolute top-10 left-20 w-16 h-0.5 bg-gradient-to-r from-green-300 to-emerald-300 hidden md:block"></div>
+                </div>
+                <h4 className="font-bold mb-3 text-gray-900">Select Ratio</h4>
+                <p className="text-sm text-gray-600 leading-relaxed">Choose your preferred staking ratio using our interactive slider interface</p>
+              </div>
+              
+              <div className="text-center group">
+                <div className="relative mb-6">
+                  <div className="w-20 h-20 bg-gradient-to-r from-yellow-500 to-orange-600 rounded-2xl flex items-center justify-center mx-auto shadow-lg group-hover:shadow-xl transition-all group-hover:scale-110">
+                    <span className="text-2xl text-white font-bold">3</span>
+                  </div>
+                  <div className="absolute top-10 left-20 w-16 h-0.5 bg-gradient-to-r from-yellow-300 to-orange-300 hidden md:block"></div>
+                </div>
+                <h4 className="font-bold mb-3 text-gray-900">Stake SOL</h4>
+                <p className="text-sm text-gray-600 leading-relaxed">Send SOL to our staking contract with your selected amount and ratio</p>
+              </div>
+              
+              <div className="text-center group">
+                <div className="relative mb-6">
+                  <div className="w-20 h-20 bg-gradient-to-r from-pink-500 to-rose-600 rounded-2xl flex items-center justify-center mx-auto shadow-lg group-hover:shadow-xl transition-all group-hover:scale-110">
+                    <span className="text-2xl text-white font-bold">4</span>
+                  </div>
+                </div>
+                <h4 className="font-bold mb-3 text-gray-900">Receive RSOL</h4>
+                <p className="text-sm text-gray-600 leading-relaxed">Get RSOL tokens automatically minted to your wallet based on your ratio</p>
+              </div>
             </div>
-            
-            <div className="text-center group">
-              <div className="relative mb-6">
-                <div className="w-20 h-20 bg-gradient-to-r from-green-500 to-emerald-600 rounded-2xl flex items-center justify-center mx-auto shadow-lg group-hover:shadow-xl transition-all group-hover:scale-110">
-                  <span className="text-2xl text-white font-bold">2</span>
+          </div>
+
+          {/* Unstaking Process */}
+          <div>
+            <h3 className="text-2xl font-bold text-center mb-8 text-gray-900 bg-gradient-to-r from-orange-600 to-red-600 bg-clip-text text-transparent">
+              Unstaking Process
+            </h3>
+            <div className="grid md:grid-cols-4 gap-8">
+              <div className="text-center group">
+                <div className="relative mb-6">
+                  <div className="w-20 h-20 bg-gradient-to-r from-orange-500 to-red-600 rounded-2xl flex items-center justify-center mx-auto shadow-lg group-hover:shadow-xl transition-all group-hover:scale-110">
+                    <span className="text-2xl text-white font-bold">1</span>
+                  </div>
+                  <div className="absolute top-10 left-20 w-16 h-0.5 bg-gradient-to-r from-orange-300 to-red-300 hidden md:block"></div>
                 </div>
-                <div className="absolute top-10 left-20 w-16 h-0.5 bg-gradient-to-r from-green-300 to-emerald-300 hidden md:block"></div>
+                <h4 className="font-bold mb-3 text-gray-900">Select RSOL Amount</h4>
+                <p className="text-sm text-gray-600 leading-relaxed">Choose how many RSOL tokens you want to convert back to SOL</p>
               </div>
-              <h4 className="font-bold mb-3 text-gray-900">Select Ratio</h4>
-              <p className="text-sm text-gray-600 leading-relaxed">Choose your preferred staking ratio using our interactive slider interface</p>
-            </div>
-            
-            <div className="text-center group">
-              <div className="relative mb-6">
-                <div className="w-20 h-20 bg-gradient-to-r from-yellow-500 to-orange-600 rounded-2xl flex items-center justify-center mx-auto shadow-lg group-hover:shadow-xl transition-all group-hover:scale-110">
-                  <span className="text-2xl text-white font-bold">3</span>
+              
+              <div className="text-center group">
+                <div className="relative mb-6">
+                  <div className="w-20 h-20 bg-gradient-to-r from-red-500 to-pink-600 rounded-2xl flex items-center justify-center mx-auto shadow-lg group-hover:shadow-xl transition-all group-hover:scale-110">
+                    <span className="text-2xl text-white font-bold">2</span>
+                  </div>
+                  <div className="absolute top-10 left-20 w-16 h-0.5 bg-gradient-to-r from-red-300 to-pink-300 hidden md:block"></div>
                 </div>
-                <div className="absolute top-10 left-20 w-16 h-0.5 bg-gradient-to-r from-yellow-300 to-orange-300 hidden md:block"></div>
+                <h4 className="font-bold mb-3 text-gray-900">Choose Ratio</h4>
+                <p className="text-sm text-gray-600 leading-relaxed">Set your unstaking ratio to determine how much SOL you&apos;ll receive</p>
               </div>
-              <h4 className="font-bold mb-3 text-gray-900">Stake SOL</h4>
-              <p className="text-sm text-gray-600 leading-relaxed">Send SOL to our staking contract with your selected amount and ratio</p>
-            </div>
-            
-            <div className="text-center group">
-              <div className="relative mb-6">
-                <div className="w-20 h-20 bg-gradient-to-r from-pink-500 to-rose-600 rounded-2xl flex items-center justify-center mx-auto shadow-lg group-hover:shadow-xl transition-all group-hover:scale-110">
-                  <span className="text-2xl text-white font-bold">4</span>
+              
+              <div className="text-center group">
+                <div className="relative mb-6">
+                  <div className="w-20 h-20 bg-gradient-to-r from-pink-500 to-purple-600 rounded-2xl flex items-center justify-center mx-auto shadow-lg group-hover:shadow-xl transition-all group-hover:scale-110">
+                    <span className="text-2xl text-white font-bold">3</span>
+                  </div>
+                  <div className="absolute top-10 left-20 w-16 h-0.5 bg-gradient-to-r from-pink-300 to-purple-300 hidden md:block"></div>
                 </div>
+                <h4 className="font-bold mb-3 text-gray-900">Burn RSOL</h4>
+                <p className="text-sm text-gray-600 leading-relaxed">Your RSOL tokens are permanently burned in the transaction</p>
               </div>
-              <h4 className="font-bold mb-3 text-gray-900">Receive RSOL</h4>
-              <p className="text-sm text-gray-600 leading-relaxed">Get RSOL tokens automatically minted to your wallet based on your ratio</p>
+              
+              <div className="text-center group">
+                <div className="relative mb-6">
+                  <div className="w-20 h-20 bg-gradient-to-r from-purple-500 to-indigo-600 rounded-2xl flex items-center justify-center mx-auto shadow-lg group-hover:shadow-xl transition-all group-hover:scale-110">
+                    <span className="text-2xl text-white font-bold">4</span>
+                  </div>
+                </div>
+                <h4 className="font-bold mb-3 text-gray-900">Receive SOL</h4>
+                <p className="text-sm text-gray-600 leading-relaxed">Get SOL transferred directly to your wallet based on the unstaking ratio</p>
+              </div>
             </div>
           </div>
         </div>
@@ -201,18 +276,27 @@ export default function Home() {
         <div className="text-center py-20">
           <div className="max-w-4xl mx-auto">
             <h2 className="text-4xl font-bold text-gray-900 mb-6">
-              Ready to Start Staking?
+              Ready to Start Your Liquid Staking Journey?
             </h2>
             <p className="text-xl text-gray-600 mb-10 max-w-2xl mx-auto">
-              Join the future of liquid staking on Solana. Choose your ratio, stake your SOL, and earn rewards instantly.
+              Join the future of liquid staking on Solana. Stake SOL to earn rewards, or unstake RSOL to get SOL back - all with flexible ratios.
             </p>
-            <Link 
-              href="/LST"
-              className="inline-flex items-center bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-12 py-4 rounded-xl text-lg font-semibold hover:from-indigo-700 hover:to-purple-700 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1"
-            >
-              Launch App
-              <span className="ml-2">🚀</span>
-            </Link>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+              <Link 
+                href="/LST"
+                className="inline-flex items-center bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-12 py-4 rounded-xl text-lg font-semibold hover:from-indigo-700 hover:to-purple-700 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1"
+              >
+                Stake SOL
+                <span className="ml-2">🚀</span>
+              </Link>
+              <Link 
+                href="/unstake"
+                className="inline-flex items-center bg-gradient-to-r from-orange-600 to-red-600 text-white px-12 py-4 rounded-xl text-lg font-semibold hover:from-orange-700 hover:to-red-700 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1"
+              >
+                Unstake RSOL
+                <span className="ml-2">�</span>
+              </Link>
+            </div>
           </div>
         </div>
       </main>

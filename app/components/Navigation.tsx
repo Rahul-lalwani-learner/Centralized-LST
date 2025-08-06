@@ -26,6 +26,12 @@ export default function Navigation() {
           >
             Stake
           </Link>
+          <Link
+            href="/unstake"
+            className="text-gray-700 no-underline px-5 py-2.5 rounded-xl transition-all duration-300 hover:bg-gradient-to-r hover:from-orange-50 hover:to-red-50 hover:text-orange-700 font-medium"
+          >
+            Unstake
+          </Link>
         </div>
       </div>
       
@@ -42,6 +48,12 @@ export default function Navigation() {
           className="text-gray-700 no-underline px-4 py-2 rounded-xl transition-all duration-300 hover:bg-gradient-to-r hover:from-indigo-50 hover:to-purple-50 hover:text-indigo-700 font-medium"
         >
           Stake
+        </Link>
+        <Link
+          href="/unstake"
+          className="text-gray-700 no-underline px-4 py-2 rounded-xl transition-all duration-300 hover:bg-gradient-to-r hover:from-orange-50 hover:to-red-50 hover:text-orange-700 font-medium"
+        >
+          Unstake
         </Link>
       </div>
       

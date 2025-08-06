@@ -109,6 +109,8 @@ export default function LST(){
 
         try {
             // Store the stake request with ratio before sending transaction
+            console.log(`📋 Storing stake request: ${wallet.publicKey.toString()}, ratio: ${currentRatio.toFixed(3)}, amount: ${parseFloat(amount)}`);
+            
             const stakeResponse = await fetch('/api/stake-request', {
                 method: 'POST',
                 headers: {
@@ -121,9 +123,14 @@ export default function LST(){
                 }),
             });
 
+            const stakeResult = await stakeResponse.json();
+            console.log('Stake request response:', stakeResult);
+
             if (!stakeResponse.ok) {
-                throw new Error('Failed to store stake request');
+                throw new Error(`Failed to store stake request: ${stakeResult.error || 'Unknown error'}`);
             }
+
+            console.log('✅ Stake request stored successfully, proceeding with transaction...');
 
             const targetWallet = new PublicKey(process.env.NEXT_PUBLIC_WALLET_PUBLIC_KEY || '');
             const lamports = parseFloat(amount) * LAMPORTS_PER_SOL;

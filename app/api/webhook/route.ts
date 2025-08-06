@@ -284,7 +284,7 @@ async function mintRSOLTokens(recipientAddress: string, solAmount: number, txSig
     // Check if the associated token account already exists
     let accountExists = false;
     try {
-      await getAccount(connection, recipientTokenAddress);
+      await getAccount(connection, recipientTokenAddress, 'confirmed', TOKEN_2022_PROGRAM_ID);
       accountExists = true;
       console.log(`✅ [${requestId}] Associated token account already exists`);
     } catch {
@@ -296,19 +296,35 @@ async function mintRSOLTokens(recipientAddress: string, solAmount: number, txSig
 
     // Add create associated token account instruction if needed
     if (!accountExists) {
-      console.log(`➕ [${requestId}] Adding create associated token account instruction`);
+      console.log(`➕ [${requestId}] Adding create associated token account instruction for Token-2022`);
+      
+      // For Token-2022, we need to specify the program correctly
       const createAccountInstruction = createAssociatedTokenAccountInstruction(
         wallet.publicKey, // payer
         recipientTokenAddress, // associatedToken
         recipientPublicKey, // owner
         mintAddress, // mint
-        TOKEN_2022_PROGRAM_ID,
-        ASSOCIATED_TOKEN_PROGRAM_ID
+        TOKEN_2022_PROGRAM_ID, // programId for Token-2022
+        ASSOCIATED_TOKEN_PROGRAM_ID // associatedTokenProgramId (this stays the same)
       );
+      
+      console.log(`🔧 [${requestId}] Token account instruction details:`, {
+        payer: wallet.publicKey.toString(),
+        associatedToken: recipientTokenAddress.toString(),
+        owner: recipientPublicKey.toString(),
+        mint: mintAddress.toString(),
+        tokenProgram: TOKEN_2022_PROGRAM_ID.toString(),
+        associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID.toString()
+      });
+      
       transaction.add(createAccountInstruction);
     }
 
     // Mint tokens (using stored ratio or 1:1 as fallback)
+    // Add a small delay to ensure stake request is stored before webhook processing
+    console.log(`⏳ [${requestId}] Adding 2 second delay to ensure stake request is stored...`);
+    await new Promise(resolve => setTimeout(resolve, 2000));
+    
     // Get the stored stake request for this user
     const stakeRequest = getStakeRequest(recipientAddress);
     let ratio = 1.0; // Default fallback
