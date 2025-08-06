@@ -16,6 +16,9 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "RSOL - Liquid Staking Platform",
   description: "Stake your SOL and receive RSOL tokens",
+  icons: {
+    icon: "/favicon.png",
+  },
 };
 
 export default function RootLayout({

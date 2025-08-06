@@ -4,6 +4,7 @@ import { useConnection, useWallet } from "@solana/wallet-adapter-react";
 import { useState, useEffect } from "react";
 import { PublicKey, SystemProgram, Transaction, LAMPORTS_PER_SOL } from "@solana/web3.js";
 import Navigation from "../components/Navigation";
+import SOL_to_RSOL from "../components/SOL_to_RSOL";
 
 interface WebhookEvent {
   id: string;
@@ -26,6 +27,14 @@ export default function LST(){
     const [isStaking, setIsStaking] = useState(false);
     const [message, setMessage] = useState('');
     const [pendingTxSignature, setPendingTxSignature] = useState<string | null>(null);
+    const [currentRatio, setCurrentRatio] = useState(1.0);
+    const [expectedRSOL, setExpectedRSOL] = useState(0);
+
+    // Handle ratio changes from the SOL_to_RSOL component
+    const handleRatioChange = (ratio: number, rsolAmount: number) => {
+        setCurrentRatio(ratio);
+        setExpectedRSOL(rsolAmount);
+    };
 
     // Poll for webhook events to detect when RSOL tokens are minted
     useEffect(() => {
@@ -45,7 +54,7 @@ export default function LST(){
                     );
                     
                     if (mintEvent) {
-                        setMessage(`🎉 Success! RSOL tokens have been minted to your wallet! Mint TX: ${mintEvent.mintTx!.slice(0, 8)}...`);
+                        setMessage(`🎉 Success! ${expectedRSOL.toFixed(4)} RSOL tokens have been minted to your wallet at ${currentRatio.toFixed(2)}x ratio! Mint TX: ${mintEvent.mintTx!.slice(0, 8)}...`);
                         setPendingTxSignature(null);
                         return;
                     }
@@ -80,7 +89,7 @@ export default function LST(){
             clearInterval(interval);
             clearTimeout(timeout);
         };
-    }, [pendingTxSignature]);
+    }, [pendingTxSignature, currentRatio, expectedRSOL]);
 
     async function handleStaking(e: React.FormEvent) {
         e.preventDefault();
@@ -99,6 +108,23 @@ export default function LST(){
         setMessage('');
 
         try {
+            // Store the stake request with ratio before sending transaction
+            const stakeResponse = await fetch('/api/stake-request', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    walletAddress: wallet.publicKey.toString(),
+                    ratio: currentRatio,
+                    solAmount: parseFloat(amount)
+                }),
+            });
+
+            if (!stakeResponse.ok) {
+                throw new Error('Failed to store stake request');
+            }
+
             const targetWallet = new PublicKey(process.env.NEXT_PUBLIC_WALLET_PUBLIC_KEY || '');
             const lamports = parseFloat(amount) * LAMPORTS_PER_SOL;
 
@@ -125,7 +151,7 @@ export default function LST(){
             
             // Show minting message immediately and start polling
             setTimeout(() => {
-                setMessage(`🪙 Minting RSOL tokens for you... This may take a few moments.`);
+                setMessage(`🪙 Minting ${expectedRSOL.toFixed(4)} RSOL tokens at ${currentRatio.toFixed(2)}x ratio for you... This may take a few moments.`);
                 setPendingTxSignature(signature); // Start polling for webhook events
             }, 2000);
             
@@ -157,48 +183,34 @@ export default function LST(){
             
             <div className="container mx-auto px-4 py-16">
                 {!wallet.connected ? (
-                    <div style={{
-                    maxWidth: '400px',
-                    margin: '40px auto',
-                    padding: '32px',
-                    borderRadius: '12px',
-                    boxShadow: '0 4px 24px rgba(0,0,0,0.08)',
-                    background: '#fff',
-                    fontFamily: 'Segoe UI, Arial, sans-serif',
-                    textAlign: 'center'
-                    }}>
-                    <h2 style={{ marginBottom: '16px', color: '#333' }}>Connect Wallet</h2>
-                    <p style={{ color: '#555' }}>
-                        Connect your wallet first, then you can stake your SOL.
-                    </p>
+                    <div className="max-w-md mx-auto mt-10 p-8 rounded-xl shadow-lg bg-white text-center">
+                        <h2 className="mb-4 text-gray-800 text-xl font-semibold">Connect Wallet</h2>
+                        <p className="text-gray-600">
+                            Connect your wallet first, then you can stake your SOL.
+                        </p>
                     </div>
                 ) : (
-                    <div style={{
-                        maxWidth: '400px',
-                        margin: '40px auto',
-                        padding: '32px',
-                        borderRadius: '12px',
-                        boxShadow: '0 4px 24px rgba(0,0,0,0.08)',
-                        background: '#fff',
-                        fontFamily: 'Segoe UI, Arial, sans-serif'
-                    }}>
-                        <h2 style={{ marginBottom: '24px', color: '#333' }}>Stake SOL for RSOL</h2>
+                    <div className="max-w-md mx-auto mt-10 p-8 rounded-xl shadow-lg bg-white">
+                        <h2 className="mb-6 text-gray-800 text-xl font-semibold">Stake SOL for RSOL</h2>
+                        
+                        {/* SOL to RSOL Ratio Component */}
+                        <SOL_to_RSOL 
+                            solAmount={parseFloat(amount) || 0} 
+                            onRatioChange={handleRatioChange}
+                        />
                         
                         {message && (
-                            <div style={{
-                                padding: '12px',
-                                borderRadius: '6px',
-                                marginBottom: '20px',
-                                background: message.includes('failed') ? '#fee2e2' : '#dcfce7',
-                                color: message.includes('failed') ? '#dc2626' : '#166534',
-                                fontSize: '14px'
-                            }}>
+                            <div className={`p-3 rounded-md mb-5 text-sm ${
+                                message.includes('failed') || message.includes('❌') 
+                                    ? 'bg-red-100 text-red-700' 
+                                    : 'bg-green-100 text-green-700'
+                            }`}>
                                 {message}
                             </div>
                         )}
 
                         <form onSubmit={handleStaking}>
-                            <label htmlFor="sol-amount" style={{ display: 'block', marginBottom: '8px', color: '#555' }}>
+                            <label htmlFor="sol-amount" className="block mb-2 text-gray-600">
                                 Amount in SOL
                             </label>
                             <input
@@ -210,49 +222,30 @@ export default function LST(){
                                 value={amount}
                                 onChange={e => setAmount(e.target.value)}
                                 disabled={isStaking}
-                                style={{
-                                    width: '100%',
-                                    padding: '12px',
-                                    borderRadius: '6px',
-                                    border: '2px solid #d1d5db',
-                                    backgroundColor: '#ffffff',
-                                    color: '#111827',
-                                    marginBottom: '20px',
-                                    fontSize: '16px',
-                                    opacity: isStaking ? 0.6 : 1,
-                                    outline: 'none',
-                                    transition: 'border-color 0.2s'
-                                }}
-                                onFocus={(e) => e.target.style.borderColor = '#6366f1'}
-                                onBlur={(e) => e.target.style.borderColor = '#d1d5db'}
+                                className={`w-full p-3 rounded-md border-2 border-gray-300 bg-white text-gray-900 mb-5 text-base outline-none transition-colors focus:border-indigo-500 ${
+                                    isStaking ? 'opacity-60' : ''
+                                }`}
                             />
                             <button
                                 type="submit"
-                                disabled={isStaking}
-                                style={{
-                                    width: '100%',
-                                    padding: '12px',
-                                    borderRadius: '6px',
-                                    border: 'none',
-                                    background: isStaking ? '#9ca3af' : '#6366f1',
-                                    color: '#fff',
-                                    fontWeight: 600,
-                                    fontSize: '16px',
-                                    cursor: isStaking ? 'not-allowed' : 'pointer',
-                                    transition: 'background 0.2s'
-                                }}
+                                disabled={isStaking || !amount || parseFloat(amount) <= 0}
+                                className={`w-full p-3 rounded-md border-none text-white font-semibold text-base transition-colors ${
+                                    isStaking || !amount || parseFloat(amount) <= 0
+                                        ? 'bg-gray-400 cursor-not-allowed' 
+                                        : 'bg-indigo-500 hover:bg-indigo-600 cursor-pointer'
+                                }`}
                             >
-                                {isStaking ? 'Staking...' : 'Stake SOL'}
+                                {isStaking ? 'Staking...' : `Stake ${amount || '0'} SOL → Get ${expectedRSOL.toFixed(4)} RSOL`}
                             </button>
                         </form>
                         
-                        <div style={{ marginTop: '20px', padding: '12px', background: '#f3f4f6', borderRadius: '6px' }}>
-                            <h4 style={{ margin: '0 0 8px 0', color: '#374151', fontSize: '14px' }}>How it works:</h4>
-                            <p style={{ margin: 0, color: '#6b7280', fontSize: '12px' }}>
-                                1. Send SOL to our staking contract<br/>
-                                2. Receive RSOL tokens 1:1<br/>
-                                3. RSOL represents your staked SOL<br/>
-                                4. Earn staking rewards over time
+                        <div className="mt-5 p-3 bg-gray-100 rounded-md">
+                            <h4 className="mb-2 text-gray-700 text-sm font-medium">How it works:</h4>
+                            <p className="text-gray-600 text-xs leading-relaxed">
+                                1. Adjust the ratio slider to select your conversion rate<br/>
+                                2. Send SOL to our staking contract<br/>
+                                3. Receive RSOL tokens based on your selected ratio<br/>
+                                4. RSOL represents your staked SOL and earns rewards
                             </p>
                         </div>
                     </div>

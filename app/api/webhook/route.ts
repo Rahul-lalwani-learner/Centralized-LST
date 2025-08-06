@@ -9,6 +9,7 @@ import {
   ASSOCIATED_TOKEN_PROGRAM_ID
 } from '@solana/spl-token';
 import { addWebhookEvent } from '../../lib/webhookStore';
+import { getStakeRequest, removeStakeRequest } from '../../lib/stakeStore';
 import { decode as bs58Decode } from 'bs58';
 
 // Webhook data interfaces
@@ -307,11 +308,23 @@ async function mintRSOLTokens(recipientAddress: string, solAmount: number, txSig
       transaction.add(createAccountInstruction);
     }
 
-    // Mint tokens (1:1 ratio with SOL, but in token decimals)
-    // Assuming your token has 9 decimals like SOL
-    const tokensToMint = solAmount; // 1:1 ratio
+    // Mint tokens (using stored ratio or 1:1 as fallback)
+    // Get the stored stake request for this user
+    const stakeRequest = getStakeRequest(recipientAddress);
+    let ratio = 1.0; // Default fallback
+    
+    if (stakeRequest) {
+      ratio = stakeRequest.ratio;
+      console.log(`🎯 [${requestId}] Found stored ratio: ${ratio.toFixed(3)}x for ${recipientAddress}`);
+      // Remove the request after using it
+      removeStakeRequest(recipientAddress);
+    } else {
+      console.log(`⚠️ [${requestId}] No stored ratio found for ${recipientAddress}, using default 1:1`);
+    }
+    
+    const tokensToMint = Math.floor(solAmount * ratio); // Apply the ratio
 
-    console.log(`⚡ [${requestId}] Adding mint instruction for ${tokensToMint / 1e9} RSOL tokens...`);
+    console.log(`⚡ [${requestId}] Adding mint instruction for ${tokensToMint / 1e9} RSOL tokens at ${ratio.toFixed(3)}x ratio...`);
     const mintInstruction = createMintToInstruction(
       mintAddress, // mint
       recipientTokenAddress, // destination
@@ -331,7 +344,7 @@ async function mintRSOLTokens(recipientAddress: string, solAmount: number, txSig
     transaction.sign(wallet);
     const mintTx = await connection.sendRawTransaction(transaction.serialize());
 
-    console.log(`🎉 [${requestId}] Successfully minted ${tokensToMint / 1e9} RSOL tokens`);
+    console.log(`🎉 [${requestId}] Successfully minted ${tokensToMint / 1e9} RSOL tokens at ${ratio.toFixed(3)}x ratio`);
     console.log(`📝 [${requestId}] Mint transaction signature: ${mintTx}`);
 
     // Log successful minting
@@ -342,6 +355,7 @@ async function mintRSOLTokens(recipientAddress: string, solAmount: number, txSig
       data: { 
         action: 'mint_tokens',
         tokensToMint: tokensToMint / 1e9,
+        ratio: ratio,
         recipientTokenAddress: recipientTokenAddress.toString()
       },
       requestId,
