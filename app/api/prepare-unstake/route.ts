@@ -61,22 +61,24 @@ export async function POST(request: NextRequest) {
     console.log(`🔍 [${requestId}] User token account: ${userTokenAddress.toString()}`);
 
     // Check if user has enough RSOL tokens
+    let userTokenBalance = 0;
     try {
       const userTokenAccount = await getAccount(connection, userTokenAddress, 'confirmed', TOKEN_2022_PROGRAM_ID);
-      console.log(`💰 [${requestId}] User token balance: ${Number(userTokenAccount.amount) / 1e9} RSOL`);
-      
-      if (Number(userTokenAccount.amount) < rsolAmount) {
-        return NextResponse.json({ 
-          success: false, 
-          error: `Insufficient RSOL balance. Required: ${rsolAmount / 1e9}, Available: ${Number(userTokenAccount.amount) / 1e9}`,
-          requestId 
-        }, { status: 400 });
-      }
-    } catch (error) {
-      console.error(`❌ [${requestId}] Error getting user token account:`, error);
+      userTokenBalance = Number(userTokenAccount.amount);
+      console.log(`💰 [${requestId}] User token balance: ${userTokenBalance / 1e9} RSOL`);
+    } catch {
+      console.log(`💰 [${requestId}] No RSOL token account found for user: ${walletAddress}`);
       return NextResponse.json({ 
         success: false, 
-        error: 'User does not have RSOL tokens or token account not found',
+        error: 'No RSOL tokens found or account does not exist',
+        requestId 
+      }, { status: 400 });
+    }
+    
+    if (userTokenBalance < rsolAmount) {
+      return NextResponse.json({ 
+        success: false, 
+        error: `Insufficient RSOL balance. Required: ${rsolAmount / 1e9}, Available: ${userTokenBalance / 1e9}`,
         requestId 
       }, { status: 400 });
     }
