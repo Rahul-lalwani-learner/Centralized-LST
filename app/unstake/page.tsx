@@ -1,14 +1,11 @@
 'use client'
 
-import { useConnection, useWallet } from "@solana/wallet-adapter-react";
-import { useState, useEffect } from "react";
-import { PublicKey } from "@solana/web3.js";
-import { getAssociatedTokenAddress, getAccount, TOKEN_2022_PROGRAM_ID } from "@solana/spl-token";
+import { useWallet } from "@solana/wallet-adapter-react";
+import { useState, useEffect, useCallback } from "react";
 import Navigation from "../components/Navigation";
 import RSOL_to_SOL from "../components/RSOL_to_SOL";
 
 export default function Unstake() {
-    const { connection } = useConnection(); 
     const wallet = useWallet();
     const [rsolAmount, setRsolAmount] = useState(0);
     const [isUnstaking, setIsUnstaking] = useState(false);
@@ -25,61 +22,37 @@ export default function Unstake() {
     };
 
     // Fetch RSOL token balance
-    const fetchRSOLBalance = async () => {
-        if (!wallet.publicKey || !connection) return;
+    const fetchRSOLBalance = useCallback(async () => {
+        if (!wallet.publicKey) return;
         
         setIsLoadingBalance(true);
         try {
-            const mintAddress = new PublicKey(process.env.NEXT_PUBLIC_TOKEN_MINT_ADDRESS || '');
-            const tokenAddress = await getAssociatedTokenAddress(
-                mintAddress,
-                wallet.publicKey,
-                false,
-                TOKEN_2022_PROGRAM_ID
-            );
-
-            const tokenAccount = await getAccount(connection, tokenAddress, 'confirmed', TOKEN_2022_PROGRAM_ID);
-            setRsolBalance(Number(tokenAccount.amount));
-            console.log(`RSOL Balance: ${Number(tokenAccount.amount) / 1e9} RSOL`);
-        } catch {
-            console.log('No RSOL tokens found or account does not exist');
+            const response = await fetch(`/api/rsol-balance?wallet=${wallet.publicKey.toString()}`);
+            const data = await response.json();
+            
+            if (data.success) {
+                setRsolBalance(data.balance);
+                console.log(`💰 RSOL Balance fetched: ${data.balanceInSOL} RSOL (${data.balance} lamports)`);
+            } else {
+                console.error('Failed to fetch RSOL balance:', data.error);
+                setRsolBalance(0);
+            }
+        } catch (error) {
+            console.error('Error fetching RSOL balance:', error);
             setRsolBalance(0);
         } finally {
             setIsLoadingBalance(false);
         }
-    };
+    }, [wallet.publicKey]);
 
     // Fetch balance when wallet connects
     useEffect(() => {
-        const loadBalance = async () => {
-            if (!wallet.publicKey || !connection) {
-                setRsolBalance(0);
-                return;
-            }
-            
-            setIsLoadingBalance(true);
-            try {
-                const mintAddress = new PublicKey(process.env.NEXT_PUBLIC_TOKEN_MINT_ADDRESS || '');
-                const tokenAddress = await getAssociatedTokenAddress(
-                    mintAddress,
-                    wallet.publicKey,
-                    false,
-                    TOKEN_2022_PROGRAM_ID
-                );
-
-                const tokenAccount = await getAccount(connection, tokenAddress, 'confirmed', TOKEN_2022_PROGRAM_ID);
-                setRsolBalance(Number(tokenAccount.amount));
-                console.log(`RSOL Balance: ${Number(tokenAccount.amount) / 1e9} RSOL`);
-            } catch {
-                console.log('No RSOL tokens found or account does not exist');
-                setRsolBalance(0);
-            } finally {
-                setIsLoadingBalance(false);
-            }
-        };
-
-        loadBalance();
-    }, [wallet.publicKey, connection]);
+        if (wallet.publicKey) {
+            fetchRSOLBalance();
+        } else {
+            setRsolBalance(0);
+        }
+    }, [wallet.publicKey, fetchRSOLBalance]);
 
     const handleUnstake = async () => {
         if (!wallet.publicKey || !wallet.signTransaction) {
@@ -98,11 +71,17 @@ export default function Unstake() {
         }
 
         setIsUnstaking(true);
-        setMessage('🔥 Processing unstaking request...');
+        setMessage('🔥 Preparing unstaking transaction...');
 
         try {
-            // Call the unstake API
-            const response = await fetch('/api/unstake', {
+            console.log(`🔥 Starting two-step unstake process:`);
+            console.log(`   RSOL to burn: ${rsolAmount / 1e9} RSOL (${rsolAmount} lamports)`);
+            console.log(`   Unstaking ratio: ${currentRatio.toFixed(3)}x`);
+            console.log(`   Expected SOL: ${(rsolAmount / currentRatio) / 1e9} SOL`);
+
+            // Step 1: Prepare burn transaction
+            setMessage('🔥 Step 1: Preparing burn transaction...');
+            const prepareResponse = await fetch('/api/prepare-unstake', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -114,11 +93,54 @@ export default function Unstake() {
                 }),
             });
 
-            const data = await response.json();
-            console.log('Unstake API response:', data);
+            const prepareData = await prepareResponse.json();
+            console.log('Prepare unstake response:', prepareData);
 
-            if (data.success) {
-                setMessage(`✅ Successfully unstaked! Burned ${data.rsolBurned} RSOL and received ${data.solReturned} SOL. Transaction: ${data.transactionSignature}`);
+            if (!prepareData.success) {
+                setMessage(`❌ Failed to prepare unstaking: ${prepareData.error}`);
+                return;
+            }
+
+            // Step 2: User signs the burn transaction
+            setMessage('🔏 Step 2: Please sign the burn transaction in your wallet...');
+            
+            const { Connection } = await import('@solana/web3.js');
+            const connection = new Connection(process.env.NEXT_PUBLIC_ALCHEMY_DEVNET_ENDPOINT || '', 'confirmed');
+            
+            // Reconstruct transaction from base64
+            const { Transaction } = await import('@solana/web3.js');
+            const burnTransaction = Transaction.from(Buffer.from(prepareData.transaction, 'base64'));
+            
+            // Sign the transaction
+            const signedBurnTx = await wallet.signTransaction(burnTransaction);
+            
+            // Send the burn transaction
+            setMessage('🔥 Step 3: Burning RSOL tokens...');
+            const burnTxSignature = await connection.sendRawTransaction(signedBurnTx.serialize());
+            console.log('Burn transaction signature:', burnTxSignature);
+
+            // Step 3: Confirm burn and receive SOL
+            setMessage('💸 Step 4: Requesting SOL transfer...');
+            const confirmResponse = await fetch('/api/confirm-unstake', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    walletAddress: wallet.publicKey.toString(),
+                    burnTxSignature: burnTxSignature,
+                    rsolAmount: rsolAmount,
+                    ratio: currentRatio
+                }),
+            });
+
+            const confirmData = await confirmResponse.json();
+            console.log('Confirm unstake response:', confirmData);
+
+            if (confirmData.success) {
+                setMessage(`✅ Successfully unstaked! Burned ${confirmData.rsolBurned} RSOL and received ${confirmData.solReturned} SOL. 
+                           Burn TX: ${confirmData.burnTxSignature.slice(0, 8)}... 
+                           SOL TX: ${confirmData.transferTxSignature.slice(0, 8)}...`);
                 
                 // Refresh RSOL balance
                 await fetchRSOLBalance();
@@ -126,11 +148,20 @@ export default function Unstake() {
                 // Reset form
                 setRsolAmount(0);
             } else {
-                setMessage(`❌ Unstaking failed: ${data.error}`);
+                setMessage(`❌ Failed to complete unstaking: ${confirmData.error}`);
             }
+
         } catch (error) {
             console.error('Unstaking error:', error);
-            setMessage('❌ Error processing unstaking request. Please try again.');
+            if (error instanceof Error) {
+                if (error.message.includes('User rejected')) {
+                    setMessage('❌ Transaction was cancelled by user.');
+                } else {
+                    setMessage(`❌ Error during unstaking: ${error.message}`);
+                }
+            } else {
+                setMessage('❌ Error processing unstaking request. Please try again.');
+            }
         } finally {
             setIsUnstaking(false);
         }
