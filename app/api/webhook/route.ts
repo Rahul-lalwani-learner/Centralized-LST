@@ -316,7 +316,9 @@ async function mintRSOLTokens(recipientAddress: string, solAmount: number, txSig
       mintAddress, // mint
       recipientTokenAddress, // destination
       wallet.publicKey, // authority
-      tokensToMint // amount
+      tokensToMint, // amount
+      [], // multisigners
+      TOKEN_2022_PROGRAM_ID // programId
     );
     transaction.add(mintInstruction);
 
