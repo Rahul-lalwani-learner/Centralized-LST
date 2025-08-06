@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { Connection, PublicKey, Transaction } from '@solana/web3.js';
+import { Connection, PublicKey, Transaction, TransactionInstruction } from '@solana/web3.js';
 import { 
   getAssociatedTokenAddress,
   getAccount,
@@ -85,6 +85,18 @@ export async function POST(request: NextRequest) {
 
     // Create burn transaction for user to sign
     const transaction = new Transaction();
+
+    // Add a unique memo to ensure transaction uniqueness
+    const uniqueMemo = `unstake-${requestId}-${Date.now()}`;
+    console.log(`📝 [${requestId}] Adding unique memo: ${uniqueMemo}`);
+    
+    // Create memo instruction to make transaction unique
+    const memoInstruction = new TransactionInstruction({
+      keys: [],
+      programId: new PublicKey('MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr'),
+      data: Buffer.from(uniqueMemo, 'utf-8'),
+    });
+    transaction.add(memoInstruction);
 
     console.log(`🔥 [${requestId}] Creating burn instruction for ${rsolAmount / 1e9} RSOL tokens...`);
     const burnInstruction = createBurnInstruction(
