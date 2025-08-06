@@ -1,8 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { Connection, Keypair, PublicKey } from '@solana/web3.js';
+import { Connection, Keypair, PublicKey, Transaction } from '@solana/web3.js';
 import { 
-  getOrCreateAssociatedTokenAccount, 
-  mintTo
+  getAssociatedTokenAddress,
+  getAccount,
+  createAssociatedTokenAccountInstruction,
+  createMintToInstruction,
+  TOKEN_PROGRAM_ID,
+  ASSOCIATED_TOKEN_PROGRAM_ID
 } from '@solana/spl-token';
 import { addWebhookEvent } from '../../lib/webhookStore';
 import { decode as bs58Decode } from 'bs58';
@@ -110,6 +114,22 @@ export async function POST(request: NextRequest) {
         console.log(`✅ [${requestId}] Transaction ${i + 1} processed successfully:`, result);
       } catch (error) {
         console.error(`❌ [${requestId}] Error processing transaction ${i + 1}:`, error);
+        
+        // Log transaction processing error
+        addWebhookEvent({
+          id: `tx-error-${requestId}-${i}`,
+          timestamp: new Date().toISOString(),
+          type: 'error',
+          data: { 
+            action: 'process_transaction_failed',
+            transactionSignature: transaction.signature,
+            error: error instanceof Error ? error.message : 'Unknown transaction processing error'
+          },
+          requestId,
+          signature: transaction.signature,
+          error: error instanceof Error ? error.message : 'Unknown transaction processing error'
+        });
+        
         results.push({ 
           success: false, 
           signature: transaction.signature,
@@ -234,24 +254,11 @@ async function mintRSOLTokens(recipientAddress: string, solAmount: number, txSig
     console.log(`🔐 [${requestId}] Private key length: ${process.env.WALLET_PRIVATE_KEY!.length}`);
     console.log(`🔐 [${requestId}] Private key first 10 chars: ${process.env.WALLET_PRIVATE_KEY!.substring(0, 10)}`);
     
-    let wallet: Keypair;
-    try {
-      // Try creating keypair directly from base64 string first
-      wallet = Keypair.fromSecretKey(
-        Buffer.from(process.env.WALLET_PRIVATE_KEY!, 'base64')
-      );
-      console.log(`✅ [${requestId}] Private key decoded as base64 successfully`);
-    } catch {
-      console.log(`⚠️ [${requestId}] Base64 decode failed, trying base58...`);
-      try {
-        // Try base58 decoding
-        wallet = Keypair.fromSecretKey(bs58Decode(process.env.WALLET_PRIVATE_KEY!));
-        console.log(`✅ [${requestId}] Private key decoded as base58 successfully`);
-      } catch (bs58Error) {
-        console.error(`❌ [${requestId}] Both base64 and base58 decoding failed:`, bs58Error);
-        throw new Error('Invalid private key format. Expected base64 or base58 encoded private key.');
-      }
-    }
+
+    
+    const wallet = Keypair.fromSecretKey(bs58Decode(process.env.WALLET_PRIVATE_KEY!));
+    console.log(`✅ [${requestId}] Private key decoded as base58 successfully`);
+   
 
     const mintAddress = new PublicKey(process.env.TOKEN_MINT_ADDRESS || '');
     const recipientPublicKey = new PublicKey(recipientAddress);
@@ -263,29 +270,62 @@ async function mintRSOLTokens(recipientAddress: string, solAmount: number, txSig
     console.log(`   SOL Amount (SOL): ${solAmount / 1e9}`);
 
     // Get or create associated token account for the recipient
-    console.log(`🔍 [${requestId}] Getting or creating associated token account...`);
-    const recipientTokenAccount = await getOrCreateAssociatedTokenAccount(
-      connection,
-      wallet,
+    console.log(`🔍 [${requestId}] Getting associated token address...`);
+    const recipientTokenAddress = await getAssociatedTokenAddress(
       mintAddress,
       recipientPublicKey
     );
 
-    console.log(`✅ [${requestId}] Recipient token account: ${recipientTokenAccount.address.toString()}`);
+    console.log(`📍 [${requestId}] Associated token address: ${recipientTokenAddress.toString()}`);
+
+    // Check if the associated token account already exists
+    let accountExists = false;
+    try {
+      await getAccount(connection, recipientTokenAddress);
+      accountExists = true;
+      console.log(`✅ [${requestId}] Associated token account already exists`);
+    } catch {
+      console.log(`🔧 [${requestId}] Associated token account does not exist, will create in transaction`);
+    }
+
+    // Create transaction with instructions
+    const transaction = new Transaction();
+
+    // Add create associated token account instruction if needed
+    if (!accountExists) {
+      console.log(`➕ [${requestId}] Adding create associated token account instruction`);
+      const createAccountInstruction = createAssociatedTokenAccountInstruction(
+        wallet.publicKey, // payer
+        recipientTokenAddress, // associatedToken
+        recipientPublicKey, // owner
+        mintAddress, // mint
+        TOKEN_PROGRAM_ID,
+        ASSOCIATED_TOKEN_PROGRAM_ID
+      );
+      transaction.add(createAccountInstruction);
+    }
 
     // Mint tokens (1:1 ratio with SOL, but in token decimals)
     // Assuming your token has 9 decimals like SOL
     const tokensToMint = solAmount; // 1:1 ratio
 
-    console.log(`⚡ [${requestId}] Minting ${tokensToMint / 1e9} RSOL tokens...`);
-    const mintTx = await mintTo(
-      connection,
-      wallet,
-      mintAddress,
-      recipientTokenAccount.address,
-      wallet.publicKey,
-      tokensToMint
+    console.log(`⚡ [${requestId}] Adding mint instruction for ${tokensToMint / 1e9} RSOL tokens...`);
+    const mintInstruction = createMintToInstruction(
+      mintAddress, // mint
+      recipientTokenAddress, // destination
+      wallet.publicKey, // authority
+      tokensToMint // amount
     );
+    transaction.add(mintInstruction);
+
+    // Get recent blockhash and send transaction
+    const { blockhash } = await connection.getLatestBlockhash();
+    transaction.recentBlockhash = blockhash;
+    transaction.feePayer = wallet.publicKey;
+
+    // Sign and send transaction
+    transaction.sign(wallet);
+    const mintTx = await connection.sendRawTransaction(transaction.serialize());
 
     console.log(`🎉 [${requestId}] Successfully minted ${tokensToMint / 1e9} RSOL tokens`);
     console.log(`📝 [${requestId}] Mint transaction signature: ${mintTx}`);
@@ -298,7 +338,7 @@ async function mintRSOLTokens(recipientAddress: string, solAmount: number, txSig
       data: { 
         action: 'mint_tokens',
         tokensToMint: tokensToMint / 1e9,
-        recipientTokenAccount: recipientTokenAccount.address.toString()
+        recipientTokenAddress: recipientTokenAddress.toString()
       },
       requestId,
       signature: txSignature,
@@ -321,6 +361,24 @@ async function mintRSOLTokens(recipientAddress: string, solAmount: number, txSig
 
   } catch (error) {
     console.error(`💥 [${requestId}] Error minting RSOL tokens:`, error);
+    
+    // Log error event
+    addWebhookEvent({
+      id: `mint-error-${requestId}-${Date.now()}`,
+      timestamp: new Date().toISOString(),
+      type: 'error',
+      data: { 
+        action: 'mint_tokens_failed',
+        error: error instanceof Error ? error.message : 'Unknown minting error',
+        recipientAddress
+      },
+      requestId,
+      signature: txSignature,
+      amount: solAmount,
+      recipient: recipientAddress,
+      error: error instanceof Error ? error.message : 'Unknown minting error'
+    });
+    
     throw error;
   }
 }
