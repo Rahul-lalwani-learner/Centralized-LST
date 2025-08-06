@@ -111,6 +111,10 @@ export default function Unstake() {
             const { Transaction } = await import('@solana/web3.js');
             const burnTransaction = Transaction.from(Buffer.from(prepareData.transaction, 'base64'));
             
+            // Get fresh blockhash to avoid "already processed" error
+            const { blockhash } = await connection.getLatestBlockhash();
+            burnTransaction.recentBlockhash = blockhash;
+            
             // Sign the transaction
             const signedBurnTx = await wallet.signTransaction(burnTransaction);
             
