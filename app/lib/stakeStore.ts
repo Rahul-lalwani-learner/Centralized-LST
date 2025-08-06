@@ -46,15 +46,19 @@ export function getStakeRequest(walletAddress: string): StakeRequest | undefined
   console.log(`🔍 [STORE] Looking for stake request for ${walletAddress}`);
   console.log(`📊 [STORE] Current pending requests: ${pendingStakes.size}`);
   
-  // Debug: log all pending requests
+  // Debug: log all pending requests with more detail
+  console.log(`📋 [STORE] All pending requests:`);
   for (const [key, request] of pendingStakes.entries()) {
-    console.log(`   - ${key}: ratio ${request.ratio.toFixed(3)}, ${request.solAmount} SOL, age: ${(Date.now() - request.timestamp) / 1000}s`);
+    console.log(`   - Key: "${key}" (length: ${key.length})`);
+    console.log(`     Address: "${request.walletAddress}" (length: ${request.walletAddress.length})`);
+    console.log(`     Ratio: ${request.ratio.toFixed(3)}, SOL: ${request.solAmount}, Age: ${(Date.now() - request.timestamp) / 1000}s`);
+    console.log(`     Key Match: ${key === walletAddress} (exact comparison)`);
   }
   
   const request = pendingStakes.get(walletAddress);
   
   if (!request) {
-    console.log(`❌ [STORE] No request found for ${walletAddress}`);
+    console.log(`❌ [STORE] No request found for "${walletAddress}" (length: ${walletAddress.length})`);
     return undefined;
   }
   
