@@ -83,11 +83,17 @@ export async function POST(request: NextRequest) {
       }, { status: 400 });
     }
 
+    // Get recent blockhash FIRST for maximum freshness
+    const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash('finalized');
+    console.log(`🔗 [${requestId}] Got fresh blockhash: ${blockhash.slice(0, 8)}, valid until block: ${lastValidBlockHeight}`);
+
     // Create burn transaction for user to sign
     const transaction = new Transaction();
+    transaction.recentBlockhash = blockhash;
+    transaction.feePayer = userPublicKey;
 
-    // Add a unique memo to ensure transaction uniqueness
-    const uniqueMemo = `unstake-${requestId}-${Date.now()}-${Math.random().toString(36).substring(2, 15)}`;
+    // Add a unique memo to ensure transaction uniqueness (include blockhash for extra uniqueness)
+    const uniqueMemo = `unstake-${requestId}-${Date.now()}-${Math.random().toString(36).substring(2, 15)}-${blockhash.slice(-8)}`;
     console.log(`📝 [${requestId}] Adding unique memo: ${uniqueMemo}`);
     
     // Create memo instruction to make transaction unique
@@ -108,11 +114,6 @@ export async function POST(request: NextRequest) {
       TOKEN_2022_PROGRAM_ID // programId
     );
     transaction.add(burnInstruction);
-
-    // Get recent blockhash
-    const { blockhash } = await connection.getLatestBlockhash();
-    transaction.recentBlockhash = blockhash;
-    transaction.feePayer = userPublicKey;
 
     // Calculate SOL to return
     const solToReturn = Math.floor(rsolAmount / ratio);

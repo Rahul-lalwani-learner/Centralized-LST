@@ -74,6 +74,10 @@ export default function Unstake() {
         setMessage('🔥 Preparing unstaking transaction...');
 
         try {
+            // Add small delay to avoid rapid successive transactions
+            console.log('⏳ Adding 500ms delay to avoid transaction conflicts...');
+            await new Promise(resolve => setTimeout(resolve, 500));
+            
             console.log(`🔥 Starting two-step unstake process:`);
             console.log(`   RSOL to burn: ${rsolAmount / 1e9} RSOL (${rsolAmount} lamports)`);
             console.log(`   Unstaking ratio: ${currentRatio.toFixed(3)}x`);
@@ -118,14 +122,14 @@ export default function Unstake() {
             // Sign the transaction
             const signedBurnTx = await wallet.signTransaction(burnTransaction);
             
-            // Send the burn transaction with retry logic
+            // Send the burn transaction with aggressive cache-busting
             setMessage('🔥 Step 3: Burning RSOL tokens...');
             const burnTxSignature = await connection.sendRawTransaction(
                 signedBurnTx.serialize(),
                 {
-                    skipPreflight: false,
-                    preflightCommitment: 'processed',
-                    maxRetries: 3
+                    skipPreflight: true, // Skip preflight to avoid cached simulation
+                    preflightCommitment: 'finalized', // Use finalized for fresh data
+                    maxRetries: 5 // More retries for better reliability
                 }
             );
             console.log('Burn transaction signature:', burnTxSignature);

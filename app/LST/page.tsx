@@ -2,7 +2,7 @@
 
 import { useConnection, useWallet } from "@solana/wallet-adapter-react";
 import { useState, useEffect } from "react";
-import { PublicKey, SystemProgram, Transaction, LAMPORTS_PER_SOL } from "@solana/web3.js";
+import { PublicKey, SystemProgram, Transaction } from "@solana/web3.js";
 import Navigation from "../components/Navigation";
 import SOL_to_RSOL from "../components/SOL_to_RSOL";
 
@@ -127,6 +127,10 @@ export default function LST(){
         setMessage('');
 
         try {
+            // Add small delay to avoid rapid successive transactions
+            console.log('⏳ Adding 500ms delay to avoid transaction conflicts...');
+            await new Promise(resolve => setTimeout(resolve, 500));
+            
             // Store the stake request with ratio before sending transaction
             console.log(`📋 Storing stake request: ${wallet.publicKey.toString()}, ratio: ${currentRatio.toFixed(3)}, amount: ${parseFloat(amount)}`);
             console.log(`📊 Expected RSOL calculation: ${parseFloat(amount)} SOL × ${currentRatio.toFixed(3)} = ${expectedRSOL.toFixed(6)} RSOL`);
@@ -153,13 +157,19 @@ export default function LST(){
             console.log('✅ Stake request stored successfully, proceeding with transaction...');
 
             const targetWallet = new PublicKey(process.env.NEXT_PUBLIC_WALLET_PUBLIC_KEY || '');
-            const lamports = parseFloat(amount) * LAMPORTS_PER_SOL;
+            const lamports = parseFloat(amount) * 1000000000; // LAMPORTS_PER_SOL = 1e9
 
+            // Get recent blockhash FIRST to ensure freshness
+            const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash('finalized');
+            console.log('🔗 Got fresh blockhash:', blockhash.slice(0, 8), 'Valid until block:', lastValidBlockHeight);
+            
             // Create transfer transaction with unique memo to avoid duplicate issues
             const transaction = new Transaction();
+            transaction.recentBlockhash = blockhash;
+            transaction.feePayer = wallet.publicKey;
             
-            // Add unique memo to ensure transaction uniqueness
-            const uniqueMemo = `stake-${Date.now()}-${Math.random().toString(36).substring(2, 15)}-${wallet.publicKey.toString().slice(-8)}`;
+            // Add unique memo to ensure transaction uniqueness (include blockhash for extra uniqueness)
+            const uniqueMemo = `stake-${Date.now()}-${Math.random().toString(36).substring(2, 15)}-${blockhash.slice(-8)}`;
             console.log('📝 Adding unique memo to stake transaction:', uniqueMemo);
             
             const { TransactionInstruction } = await import('@solana/web3.js');
@@ -179,21 +189,16 @@ export default function LST(){
                 })
             );
 
-            // Get recent blockhash
-            const { blockhash } = await connection.getLatestBlockhash();
-            transaction.recentBlockhash = blockhash;
-            transaction.feePayer = wallet.publicKey;
-
             // Sign and send transaction with retry logic
             const signedTransaction = await wallet.signTransaction(transaction);
             
-            // Send with skipPreflight and maxRetries to avoid cache issues
+            // Send with aggressive cache-busting options
             const signature = await connection.sendRawTransaction(
                 signedTransaction.serialize(),
                 {
-                    skipPreflight: false,
-                    preflightCommitment: 'processed',
-                    maxRetries: 3
+                    skipPreflight: true, // Skip preflight to avoid cached simulation
+                    preflightCommitment: 'finalized', // Use finalized for fresh data
+                    maxRetries: 5 // More retries for better reliability
                 }
             );
             
