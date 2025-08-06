@@ -155,8 +155,23 @@ export default function LST(){
             const targetWallet = new PublicKey(process.env.NEXT_PUBLIC_WALLET_PUBLIC_KEY || '');
             const lamports = parseFloat(amount) * LAMPORTS_PER_SOL;
 
-            // Create transfer transaction
-            const transaction = new Transaction().add(
+            // Create transfer transaction with unique memo to avoid duplicate issues
+            const transaction = new Transaction();
+            
+            // Add unique memo to ensure transaction uniqueness
+            const uniqueMemo = `stake-${Date.now()}-${Math.random().toString(36).substring(7)}`;
+            console.log('📝 Adding unique memo to stake transaction:', uniqueMemo);
+            
+            const { TransactionInstruction } = await import('@solana/web3.js');
+            const memoInstruction = new TransactionInstruction({
+                keys: [],
+                programId: new PublicKey('MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr'),
+                data: Buffer.from(uniqueMemo, 'utf-8'),
+            });
+            transaction.add(memoInstruction);
+            
+            // Add the SOL transfer instruction
+            transaction.add(
                 SystemProgram.transfer({
                     fromPubkey: wallet.publicKey,
                     toPubkey: targetWallet,
