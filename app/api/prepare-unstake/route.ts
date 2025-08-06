@@ -87,7 +87,7 @@ export async function POST(request: NextRequest) {
     const transaction = new Transaction();
 
     // Add a unique memo to ensure transaction uniqueness
-    const uniqueMemo = `unstake-${requestId}-${Date.now()}`;
+    const uniqueMemo = `unstake-${requestId}-${Date.now()}-${Math.random().toString(36).substring(2, 15)}`;
     console.log(`📝 [${requestId}] Adding unique memo: ${uniqueMemo}`);
     
     // Create memo instruction to make transaction unique

@@ -118,10 +118,25 @@ export default function Unstake() {
             // Sign the transaction
             const signedBurnTx = await wallet.signTransaction(burnTransaction);
             
-            // Send the burn transaction
+            // Send the burn transaction with retry logic
             setMessage('🔥 Step 3: Burning RSOL tokens...');
-            const burnTxSignature = await connection.sendRawTransaction(signedBurnTx.serialize());
+            const burnTxSignature = await connection.sendRawTransaction(
+                signedBurnTx.serialize(),
+                {
+                    skipPreflight: false,
+                    preflightCommitment: 'processed',
+                    maxRetries: 3
+                }
+            );
             console.log('Burn transaction signature:', burnTxSignature);
+            
+            // Wait for initial confirmation to avoid rapid successive transactions
+            try {
+                await connection.confirmTransaction(burnTxSignature, 'processed');
+                console.log('Burn transaction confirmed as processed');
+            } catch (confirmError) {
+                console.log('Burn transaction confirmation failed, but continuing:', confirmError);
+            }
 
             // Step 3: Confirm burn and receive SOL
             setMessage('💸 Step 4: Requesting SOL transfer...');
@@ -167,7 +182,10 @@ export default function Unstake() {
                 setMessage('❌ Error processing unstaking request. Please try again.');
             }
         } finally {
-            setIsUnstaking(false);
+            // Add small delay before re-enabling to prevent rapid successive transactions
+            setTimeout(() => {
+                setIsUnstaking(false);
+            }, 1000);
         }
     };
 

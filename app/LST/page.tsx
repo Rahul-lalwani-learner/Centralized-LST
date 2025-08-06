@@ -159,7 +159,7 @@ export default function LST(){
             const transaction = new Transaction();
             
             // Add unique memo to ensure transaction uniqueness
-            const uniqueMemo = `stake-${Date.now()}-${Math.random().toString(36).substring(7)}`;
+            const uniqueMemo = `stake-${Date.now()}-${Math.random().toString(36).substring(2, 15)}-${wallet.publicKey.toString().slice(-8)}`;
             console.log('📝 Adding unique memo to stake transaction:', uniqueMemo);
             
             const { TransactionInstruction } = await import('@solana/web3.js');
@@ -184,11 +184,29 @@ export default function LST(){
             transaction.recentBlockhash = blockhash;
             transaction.feePayer = wallet.publicKey;
 
-            // Sign and send transaction
+            // Sign and send transaction with retry logic
             const signedTransaction = await wallet.signTransaction(transaction);
-            const signature = await connection.sendRawTransaction(signedTransaction.serialize());
+            
+            // Send with skipPreflight and maxRetries to avoid cache issues
+            const signature = await connection.sendRawTransaction(
+                signedTransaction.serialize(),
+                {
+                    skipPreflight: false,
+                    preflightCommitment: 'processed',
+                    maxRetries: 3
+                }
+            );
             
             console.log('Transaction sent with signature:', signature);
+            
+            // Wait for initial confirmation to avoid rapid successive transactions
+            try {
+                await connection.confirmTransaction(signature, 'processed');
+                console.log('Transaction confirmed as processed');
+            } catch (confirmError) {
+                console.log('Transaction confirmation failed, but continuing:', confirmError);
+            }
+            
             setMessage(`✅ Transaction successful! Signature: ${signature.slice(0, 8)}...`);
             
             // Show minting message immediately and start polling
@@ -216,7 +234,10 @@ export default function LST(){
                 setMessage('Staking failed. Please try again.');
             }
         } finally {
-            setIsStaking(false);
+            // Add small delay before re-enabling to prevent rapid successive transactions
+            setTimeout(() => {
+                setIsStaking(false);
+            }, 1000);
         }
     }
 
