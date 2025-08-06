@@ -1,9 +1,23 @@
 'use client'
 
 import { useConnection, useWallet } from "@solana/wallet-adapter-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { PublicKey, SystemProgram, Transaction, LAMPORTS_PER_SOL } from "@solana/web3.js";
 import Navigation from "../components/Navigation";
+
+interface WebhookEvent {
+  id: string;
+  timestamp: string;
+  type: 'incoming' | 'processing' | 'completed' | 'error';
+  data: Record<string, unknown>;
+  requestId?: string;
+  signature?: string;
+  amount?: number;
+  recipient?: string;
+  mintTx?: string;
+  processingTime?: number;
+  error?: string;
+}
 
 export default function LST(){
     const {connection} = useConnection(); 
@@ -11,6 +25,62 @@ export default function LST(){
     const [amount, setAmount] = useState('');
     const [isStaking, setIsStaking] = useState(false);
     const [message, setMessage] = useState('');
+    const [pendingTxSignature, setPendingTxSignature] = useState<string | null>(null);
+
+    // Poll for webhook events to detect when RSOL tokens are minted
+    useEffect(() => {
+        if (!pendingTxSignature) return;
+
+        const pollForMinting = async () => {
+            try {
+                const response = await fetch('/api/webhook-events');
+                const data = await response.json();
+                
+                if (data.success && data.events) {
+                    // Look for a completed minting event with our transaction signature
+                    const mintEvent = data.events.find((event: WebhookEvent) => 
+                        event.signature === pendingTxSignature && 
+                        event.type === 'completed' && 
+                        event.mintTx
+                    );
+                    
+                    if (mintEvent) {
+                        setMessage(`🎉 Success! RSOL tokens have been minted to your wallet! Mint TX: ${mintEvent.mintTx!.slice(0, 8)}...`);
+                        setPendingTxSignature(null);
+                        return;
+                    }
+                    
+                    // Check for error events
+                    const errorEvent = data.events.find((event: WebhookEvent) => 
+                        event.signature === pendingTxSignature && 
+                        event.type === 'error'
+                    );
+                    
+                    if (errorEvent) {
+                        setMessage(`❌ Token minting failed: ${errorEvent.error || 'Unknown error'}`);
+                        setPendingTxSignature(null);
+                        return;
+                    }
+                }
+            } catch (error) {
+                console.error('Error polling for minting status:', error);
+            }
+        };
+
+        const interval = setInterval(pollForMinting, 3000); // Poll every 3 seconds
+        
+        // Stop polling after 2 minutes
+        const timeout = setTimeout(() => {
+            setMessage(`⏰ Minting is taking longer than expected. Please check your wallet or the monitor page.`);
+            setPendingTxSignature(null);
+            clearInterval(interval);
+        }, 120000);
+
+        return () => {
+            clearInterval(interval);
+            clearTimeout(timeout);
+        };
+    }, [pendingTxSignature]);
 
     async function handleStaking(e: React.FormEvent) {
         e.preventDefault();
@@ -51,28 +121,15 @@ export default function LST(){
             const signature = await connection.sendRawTransaction(signedTransaction.serialize());
             
             console.log('Transaction sent with signature:', signature);
-            setMessage(`Transaction sent! Signature: ${signature.slice(0, 8)}... Confirming...`);
+            setMessage(`✅ Transaction successful! Signature: ${signature.slice(0, 8)}...`);
             
-            // Confirm transaction with longer timeout and better error handling
-            try {
-                await connection.confirmTransaction({
-                    signature,
-                    blockhash,
-                    lastValidBlockHeight: (await connection.getLatestBlockhash()).lastValidBlockHeight
-                }, 'confirmed');
-                
-                setMessage(`Successfully staked ${amount} SOL! Transaction: ${signature.slice(0, 8)}...`);
-                setAmount('');
-                
-                // Optional: Immediately call your webhook to process the transaction
-                // instead of waiting for Helius webhook
-                console.log('Transaction confirmed. RSOL tokens should be minted automatically via webhook.');
-                
-            } catch (confirmError) {
-                console.warn('Transaction confirmation timeout, but transaction may still succeed:', confirmError);
-                setMessage(`Transaction sent (${signature.slice(0, 8)}...) but confirmation timed out. Check your wallet for RSOL tokens in a few minutes.`);
-                setAmount('');
-            }
+            // Show minting message immediately and start polling
+            setTimeout(() => {
+                setMessage(`🪙 Minting RSOL tokens for you... This may take a few moments.`);
+                setPendingTxSignature(signature); // Start polling for webhook events
+            }, 2000);
+            
+            setAmount('');
             
         } catch (error) {
             console.error('Staking error:', error);
@@ -157,11 +214,17 @@ export default function LST(){
                                     width: '100%',
                                     padding: '12px',
                                     borderRadius: '6px',
-                                    border: '1px solid #ccc',
+                                    border: '2px solid #d1d5db',
+                                    backgroundColor: '#ffffff',
+                                    color: '#111827',
                                     marginBottom: '20px',
                                     fontSize: '16px',
-                                    opacity: isStaking ? 0.6 : 1
+                                    opacity: isStaking ? 0.6 : 1,
+                                    outline: 'none',
+                                    transition: 'border-color 0.2s'
                                 }}
+                                onFocus={(e) => e.target.style.borderColor = '#6366f1'}
+                                onBlur={(e) => e.target.style.borderColor = '#d1d5db'}
                             />
                             <button
                                 type="submit"

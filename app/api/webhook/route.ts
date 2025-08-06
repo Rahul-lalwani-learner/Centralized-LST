@@ -5,6 +5,7 @@ import {
   mintTo
 } from '@solana/spl-token';
 import { addWebhookEvent } from '../../lib/webhookStore';
+import { decode as bs58Decode } from 'bs58';
 
 // Webhook data interfaces
 interface AccountData {
@@ -229,9 +230,28 @@ async function mintRSOLTokens(recipientAddress: string, solAmount: number, txSig
       throw new Error('WALLET_PRIVATE_KEY not found in environment variables');
     }
 
-    // Create keypair from private key
-    const privateKeyArray = JSON.parse(`[${process.env.WALLET_PRIVATE_KEY}]`);
-    const wallet = Keypair.fromSecretKey(new Uint8Array(privateKeyArray));
+    // Create keypair from private key (typically base58 format for Solana)
+    console.log(`🔐 [${requestId}] Private key length: ${process.env.WALLET_PRIVATE_KEY!.length}`);
+    console.log(`🔐 [${requestId}] Private key first 10 chars: ${process.env.WALLET_PRIVATE_KEY!.substring(0, 10)}`);
+    
+    let wallet: Keypair;
+    try {
+      // Try creating keypair directly from base64 string first
+      wallet = Keypair.fromSecretKey(
+        Buffer.from(process.env.WALLET_PRIVATE_KEY!, 'base64')
+      );
+      console.log(`✅ [${requestId}] Private key decoded as base64 successfully`);
+    } catch {
+      console.log(`⚠️ [${requestId}] Base64 decode failed, trying base58...`);
+      try {
+        // Try base58 decoding
+        wallet = Keypair.fromSecretKey(bs58Decode(process.env.WALLET_PRIVATE_KEY!));
+        console.log(`✅ [${requestId}] Private key decoded as base58 successfully`);
+      } catch (bs58Error) {
+        console.error(`❌ [${requestId}] Both base64 and base58 decoding failed:`, bs58Error);
+        throw new Error('Invalid private key format. Expected base64 or base58 encoded private key.');
+      }
+    }
 
     const mintAddress = new PublicKey(process.env.TOKEN_MINT_ADDRESS || '');
     const recipientPublicKey = new PublicKey(recipientAddress);
