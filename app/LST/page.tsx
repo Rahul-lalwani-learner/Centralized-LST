@@ -5,6 +5,7 @@ import { useState, useEffect } from "react";
 import { PublicKey, SystemProgram, Transaction } from "@solana/web3.js";
 import Navigation from "../components/Navigation";
 import SOL_to_RSOL from "../components/SOL_to_RSOL";
+import StakingLoader from "../components/StakingLoader";
 
 interface WebhookEvent {
   id: string;
@@ -251,6 +252,7 @@ export default function LST(){
     return (
         <div className="min-h-screen bg-gray-50">
             <Navigation />
+            <StakingLoader show={isStaking} />
             
             <div className="container mx-auto px-4 py-16">
                 {!wallet.connected ? (
