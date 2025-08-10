@@ -10,7 +10,7 @@ import {
 interface PrepareUnstakeRequest {
   walletAddress: string;
   rsolAmount: number; // in token units (with decimals)
-  ratio: number; // ratio to calculate SOL return
+  yield: number; // yield percent, used to calculate ratio
 }
 
 export async function POST(request: NextRequest) {
@@ -31,13 +31,16 @@ export async function POST(request: NextRequest) {
     const body: PrepareUnstakeRequest = await request.json();
     console.log(`📦 [${requestId}] Prepare unstake request:`, body);
 
-    const { walletAddress, rsolAmount, ratio } = body;
+    const { walletAddress, rsolAmount, yield: yieldPercent } = body;
+
+    // Calculate ratio from yield percent
+    const ratio = 1 + (yieldPercent / 100);
 
     // Validate request data
-    if (!walletAddress || !rsolAmount || !ratio || rsolAmount <= 0 || ratio <= 0) {
+    if (!walletAddress || !rsolAmount || yieldPercent === undefined || rsolAmount <= 0 || ratio <= 0) {
       return NextResponse.json({ 
         success: false, 
-        error: 'Invalid request data: walletAddress, rsolAmount, and ratio are required',
+        error: 'Invalid request data: walletAddress, rsolAmount, and yield are required',
         requestId 
       }, { status: 400 });
     }
@@ -115,10 +118,10 @@ export async function POST(request: NextRequest) {
     );
     transaction.add(burnInstruction);
 
-    // Calculate SOL to return
-    const solToReturn = Math.floor(rsolAmount / ratio);
+  // Calculate SOL to return
+  const solToReturn = Math.floor(rsolAmount * ratio);
     
-    console.log(`🔢 [${requestId}] Calculation: ${rsolAmount / 1e9} RSOL ÷ ${ratio}x = ${solToReturn / 1e9} SOL`);
+  console.log(`🔢 [${requestId}] Calculation: ${rsolAmount / 1e9} RSOL × ${ratio}x = ${solToReturn / 1e9} SOL`);
 
     // Serialize transaction for user to sign
     const serializedTransaction = transaction.serialize({ requireAllSignatures: false }).toString('base64');

@@ -6,7 +6,7 @@ interface ConfirmUnstakeRequest {
   walletAddress: string;
   burnTxSignature: string;
   rsolAmount: number;
-  ratio: number;
+  yield: number;
 }
 
 export async function POST(request: NextRequest) {
@@ -27,10 +27,13 @@ export async function POST(request: NextRequest) {
     const body: ConfirmUnstakeRequest = await request.json();
     console.log(`📦 [${requestId}] Confirm unstake request:`, body);
 
-    const { walletAddress, burnTxSignature, rsolAmount, ratio } = body;
+    const { walletAddress, burnTxSignature, rsolAmount, yield: yieldPercent } = body;
+
+    // Calculate ratio from yield percent
+    const ratio = 1 + (yieldPercent / 100);
 
     // Validate request data
-    if (!walletAddress || !burnTxSignature || !rsolAmount || !ratio) {
+    if (!walletAddress || !burnTxSignature || !rsolAmount || yieldPercent === undefined) {
       return NextResponse.json({ 
         success: false, 
         error: 'Missing required fields',
@@ -69,9 +72,9 @@ export async function POST(request: NextRequest) {
       }, { status: 400 });
     }
 
-    // Calculate SOL to return
-    const solToReturn = Math.floor(rsolAmount / ratio);
-    console.log(`🔢 [${requestId}] Sending ${solToReturn / 1e9} SOL for ${rsolAmount / 1e9} RSOL at ${ratio}x ratio`);
+  // Calculate SOL to return
+  const solToReturn = Math.floor(rsolAmount * ratio);
+  console.log(`🔢 [${requestId}] Sending ${solToReturn / 1e9} SOL for ${rsolAmount / 1e9} RSOL at ${ratio}x ratio`);
 
     // Create keypair from private key
     const wallet = Keypair.fromSecretKey(bs58Decode(process.env.WALLET_PRIVATE_KEY!));

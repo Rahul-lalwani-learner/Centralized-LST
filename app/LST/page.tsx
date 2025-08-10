@@ -27,12 +27,14 @@ export default function LST(){
     const [isStaking, setIsStaking] = useState(false);
     const [message, setMessage] = useState('');
     const [pendingTxSignature, setPendingTxSignature] = useState<string | null>(null);
+    const [currentYield, setCurrentYield] = useState(0);
     const [currentRatio, setCurrentRatio] = useState(1.0);
     const [expectedRSOL, setExpectedRSOL] = useState(0);
 
-    // Handle ratio changes from the SOL_to_RSOL component
-    const handleRatioChange = (ratio: number, rsolAmount: number) => {
-        console.log(`🔧 Ratio changed: ${ratio.toFixed(3)}x, RSOL Amount: ${rsolAmount.toFixed(6)}`);
+    // Handle yield changes from the SOL_to_RSOL component
+    const handleYieldChange = (yieldPercent: number, rsolAmount: number) => {
+        setCurrentYield(yieldPercent);
+        const ratio = 1 + yieldPercent / 100;
         setCurrentRatio(ratio);
         setExpectedRSOL(rsolAmount);
     };
@@ -132,7 +134,7 @@ export default function LST(){
             await new Promise(resolve => setTimeout(resolve, 500));
             
             // Store the stake request with ratio before sending transaction
-            console.log(`📋 Storing stake request: ${wallet.publicKey.toString()}, ratio: ${currentRatio.toFixed(3)}, amount: ${parseFloat(amount)}`);
+            console.log(`📋 Storing stake request: ${wallet.publicKey.toString()}, yield: ${currentYield.toFixed(2)}%, amount: ${parseFloat(amount)}`);
             console.log(`📊 Expected RSOL calculation: ${parseFloat(amount)} SOL × ${currentRatio.toFixed(3)} = ${expectedRSOL.toFixed(6)} RSOL`);
             
             const stakeResponse = await fetch('/api/stake-request', {
@@ -142,7 +144,7 @@ export default function LST(){
                 },
                 body: JSON.stringify({
                     walletAddress: wallet.publicKey.toString(),
-                    ratio: currentRatio,
+                    yield: currentYield,
                     solAmount: parseFloat(amount)
                 }),
             });
@@ -265,7 +267,7 @@ export default function LST(){
                         {/* SOL to RSOL Ratio Component */}
                         <SOL_to_RSOL 
                             solAmount={parseFloat(amount) || 0} 
-                            onRatioChange={handleRatioChange}
+                            onYieldChange={handleYieldChange}
                         />
                         
                         {message && (

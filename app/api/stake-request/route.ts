@@ -3,18 +3,23 @@ import { addStakeRequest } from '../../lib/stakeStore';
 
 export async function POST(request: NextRequest) {
   try {
-    const { walletAddress, ratio, solAmount } = await request.json();
+    const { walletAddress, yield: yieldPercent, solAmount } = await request.json();
     
-    if (!walletAddress || !ratio || !solAmount) {
+    if (!walletAddress || yieldPercent === undefined || !solAmount) {
       return NextResponse.json({ 
         success: false, 
-        error: 'Missing required fields: walletAddress, ratio, solAmount' 
+        error: 'Missing required fields: walletAddress, yield, solAmount' 
       }, { status: 400 });
     }
 
-    const stakeRequest = addStakeRequest(walletAddress, ratio, solAmount);
-    
-    console.log(`📋 Stake request stored: ${walletAddress} - ${solAmount} SOL at ${ratio}x ratio`);
+  // Calculate ratio from yield
+  const ratio = 1 + (yieldPercent / 100);
+
+  // RSOL = SOL / (1 + yield/100)
+  const rsolAmount = solAmount / ratio;
+  const stakeRequest = addStakeRequest(walletAddress, ratio, rsolAmount);
+
+  console.log(`📋 Stake request stored: ${walletAddress} - ${solAmount} SOL, ${rsolAmount} RSOL at ${ratio}x ratio (yield: ${yieldPercent}%)`);
     
     return NextResponse.json({ 
       success: true, 

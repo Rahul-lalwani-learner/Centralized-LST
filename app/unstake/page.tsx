@@ -10,13 +10,16 @@ export default function Unstake() {
     const [rsolAmount, setRsolAmount] = useState(0);
     const [isUnstaking, setIsUnstaking] = useState(false);
     const [message, setMessage] = useState('');
+    const [currentYield, setCurrentYield] = useState(0);
     const [currentRatio, setCurrentRatio] = useState(1.0);
     const [rsolBalance, setRsolBalance] = useState(0);
     const [isLoadingBalance, setIsLoadingBalance] = useState(false);
 
     // Handle ratio changes from the RSOL_to_SOL component
-    const handleRatioChange = (ratio: number, calculatedSolAmount: number, rsolToUnstake: number) => {
-        setCurrentRatio(ratio);
+    // Handle yield changes from the RSOL_to_SOL component
+    const handleYieldChange = (yieldPercent: number, calculatedSolAmount: number, rsolToUnstake: number) => {
+        setCurrentYield(yieldPercent);
+        setCurrentRatio(1 + yieldPercent / 100);
         // Note: We don't need to store calculatedSolAmount in state since it's computed
         setRsolAmount(rsolToUnstake);
     };
@@ -93,7 +96,7 @@ export default function Unstake() {
                 body: JSON.stringify({
                     walletAddress: wallet.publicKey.toString(),
                     rsolAmount: rsolAmount,
-                    ratio: currentRatio
+                    yield: currentYield
                 }),
             });
 
@@ -153,7 +156,7 @@ export default function Unstake() {
                     walletAddress: wallet.publicKey.toString(),
                     burnTxSignature: burnTxSignature,
                     rsolAmount: rsolAmount,
-                    ratio: currentRatio
+                    yield: currentYield
                 }),
             });
 
@@ -224,7 +227,7 @@ export default function Unstake() {
                     {/* Left Column - Unstaking Controls */}
                     <div className="space-y-6">
                         <RSOL_to_SOL 
-                            onRatioChange={handleRatioChange}
+                            onYieldChange={handleYieldChange}
                             rsolBalance={rsolBalance}
                         />
                         

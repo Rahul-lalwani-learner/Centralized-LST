@@ -4,52 +4,54 @@ import { useState } from 'react';
 import { useWallet } from '@solana/wallet-adapter-react';
 
 interface RSOL_to_SOL_Props {
-  onRatioChange: (ratio: number, solAmount: number, rsolAmount: number) => void;
+  onYieldChange: (yieldPercent: number, solAmount: number, rsolAmount: number) => void;
   rsolBalance?: number;
 }
 
-export default function RSOL_to_SOL({ onRatioChange, rsolBalance = 0 }: RSOL_to_SOL_Props) {
+export default function RSOL_to_SOL({ onYieldChange, rsolBalance = 0 }: RSOL_to_SOL_Props) {
   const { publicKey } = useWallet();
+  const [yieldPercent, setYieldPercent] = useState(0);
   const [ratio, setRatio] = useState(1.0);
   const [rsolAmount, setRsolAmount] = useState(0);
   const [solAmount, setSolAmount] = useState(0);
 
-  // Handle ratio change from slider
-  const handleRatioChange = (newRatio: number) => {
-    setRatio(newRatio);
-    const calculatedSol = rsolAmount / newRatio;
+  // Handle yield change from slider
+  const handleYieldChange = (newYield: number) => {
+    setYieldPercent(newYield);
+    const calculatedRatio = 1 + newYield / 100;
+    setRatio(calculatedRatio);
+  const calculatedSol = rsolAmount * calculatedRatio;
     setSolAmount(calculatedSol);
-    onRatioChange(newRatio, calculatedSol, rsolAmount);
+    onYieldChange(newYield, calculatedSol, rsolAmount);
   };
 
   // Handle RSOL amount change
   const handleRsolAmountChange = (newRsolAmount: number) => {
     setRsolAmount(newRsolAmount);
-    const calculatedSol = newRsolAmount / ratio;
+  const calculatedSol = newRsolAmount * ratio;
     setSolAmount(calculatedSol);
-    onRatioChange(ratio, calculatedSol, newRsolAmount);
+    onYieldChange(yieldPercent, calculatedSol, newRsolAmount);
   };
 
-  // Color coding for ratio (reverse of staking - green for conservative, red for aggressive)
-  const getRatioColor = (currentRatio: number) => {
-    if (currentRatio <= 0.9) return 'from-green-500 to-emerald-600'; // Conservative - less SOL returned
-    if (currentRatio <= 1.0) return 'from-yellow-500 to-orange-500';
-    if (currentRatio <= 1.1) return 'from-orange-500 to-red-500';
-    return 'from-red-500 to-red-600'; // Aggressive - more SOL returned
+  // Color coding for yield
+  const getYieldColor = (currentYield: number) => {
+    if (currentYield <= 5) return 'from-green-500 to-emerald-600'; // Conservative
+    if (currentYield <= 12) return 'from-yellow-500 to-orange-500';
+    if (currentYield <= 17) return 'from-orange-500 to-red-500';
+    return 'from-red-500 to-red-600'; // Aggressive
   };
 
-  const getRatioLabel = (currentRatio: number) => {
-    if (currentRatio <= 0.9) return 'Conservative';
-    if (currentRatio <= 1.0) return 'Balanced';
-    if (currentRatio <= 1.1) return 'Aggressive';
+  const getYieldLabel = (currentYield: number) => {
+    if (currentYield <= 5) return 'Safe';
+    if (currentYield <= 12) return 'Standard';
+    if (currentYield <= 17) return 'Aggressive';
     return 'Very Aggressive';
   };
 
-  const getRatioDescription = (currentRatio: number) => {
-    if (currentRatio <= 0.9) return 'Lower SOL return, safer unstaking';
-    if (currentRatio <= 1.0) return 'Standard 1:1 unstaking ratio';
-    if (currentRatio <= 1.1) return 'Higher SOL return, moderate risk';
-    return 'Maximum SOL return, highest risk';
+  const getYieldDescription = (currentYield: number) => {
+    if (currentYield <= 5) return 'Lower yield, lower risk.';
+    if (currentYield <= 12) return 'Balanced yield and risk.';
+    return 'Higher yield, higher risk.';
   };
 
   if (!publicKey) {
@@ -110,43 +112,31 @@ export default function RSOL_to_SOL({ onRatioChange, rsolBalance = 0 }: RSOL_to_
         </div>
       </div>
 
-      {/* Ratio Slider */}
+      {/* Yield Slider */}
       <div className="mb-6">
         <div className="flex justify-between items-center mb-3">
           <label className="text-sm font-medium text-gray-700">
-            Unstaking Ratio: {ratio.toFixed(3)}x
+            Select Yield: {yieldPercent.toFixed(2)}%
           </label>
-          <span className={`px-3 py-1 rounded-full text-xs font-medium text-white bg-gradient-to-r ${getRatioColor(ratio)}`}>
-            {getRatioLabel(ratio)}
+          <span className={`px-3 py-1 rounded-full text-xs font-medium text-white bg-gradient-to-r ${getYieldColor(yieldPercent)}`}>
+            {getYieldLabel(yieldPercent)}
           </span>
         </div>
-        
-        <div className="relative">
-          <input
-            type="range"
-            min="0.8"
-            max="1.2"
-            step="0.001"
-            value={ratio}
-            onChange={(e) => handleRatioChange(parseFloat(e.target.value))}
-            className="w-full h-3 bg-gray-200 rounded-lg appearance-none cursor-pointer slider"
-            style={{
-              background: `linear-gradient(to right, 
-                #10b981 0%, #10b981 ${((0.9 - 0.8) / (1.2 - 0.8)) * 100}%, 
-                #f59e0b ${((0.9 - 0.8) / (1.2 - 0.8)) * 100}%, #f59e0b ${((1.0 - 0.8) / (1.2 - 0.8)) * 100}%, 
-                #ef4444 ${((1.0 - 0.8) / (1.2 - 0.8)) * 100}%, #ef4444 100%)`
-            }}
-          />
-          <div className="flex justify-between text-xs text-gray-500 mt-2">
-            <span>0.8x (Safe)</span>
-            <span>1.0x (Standard)</span>
-            <span>1.2x (Aggressive)</span>
-          </div>
+        <input
+          type="range"
+          min="0"
+          max="20"
+          step="0.1"
+          value={yieldPercent}
+          onChange={(e) => handleYieldChange(parseFloat(e.target.value))}
+          className="w-full h-3 bg-gray-200 rounded-lg appearance-none cursor-pointer slider"
+        />
+        <div className="flex justify-between text-xs text-gray-500 mt-2">
+          <span>0% (Safe)</span>
+          <span>10% (Standard)</span>
+          <span>20% (Aggressive)</span>
         </div>
-        
-        <p className="text-sm text-gray-600 mt-2">
-          {getRatioDescription(ratio)}
-        </p>
+        <p className="text-sm text-gray-600 mt-2">{getYieldDescription(yieldPercent)}</p>
       </div>
 
       {/* Calculation Display */}
@@ -164,6 +154,10 @@ export default function RSOL_to_SOL({ onRatioChange, rsolBalance = 0 }: RSOL_to_
             <span className="font-bold text-orange-600">{(rsolAmount / 1e9).toFixed(6)} RSOL</span>
           </div>
           
+          <div className="flex justify-between items-center py-2 border-b border-gray-200">
+            <span className="text-gray-600">Selected Yield:</span>
+            <span className="font-bold text-orange-600">{yieldPercent.toFixed(2)}%</span>
+          </div>
           <div className="flex justify-between items-center py-2 border-b border-gray-200">
             <span className="text-gray-600">Unstaking Ratio:</span>
             <span className="font-bold text-orange-600">{ratio.toFixed(3)}x</span>
@@ -185,8 +179,8 @@ export default function RSOL_to_SOL({ onRatioChange, rsolBalance = 0 }: RSOL_to_
           <div className="flex-1">
             <h5 className="font-medium text-blue-900 mb-1">How Unstaking Works</h5>
             <p className="text-sm text-blue-700 leading-relaxed">
-              Your RSOL tokens will be burned and you&apos;ll receive SOL based on your selected ratio. 
-              Higher ratios provide more SOL but may carry additional risk considerations.
+              Your RSOL tokens will be burned and you&apos;ll receive SOL based on your selected yield. 
+              Higher yields provide more SOL but may carry additional risk considerations. The unstaking ratio is automatically calculated from your yield selection.
             </p>
           </div>
         </div>
