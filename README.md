@@ -103,8 +103,6 @@ lst-centralized-platform/
 │   │   └── page.tsx             # Interactive staking learning experience
 │   ├── unstake/                 # Educational Unstaking Demo
 │   │   └── page.tsx             # Interactive unstaking learning experience
-│   ├── monitor/                 # Development Tools
-│   │   └── page.tsx             # Real-time transaction monitor
 │   └── layout.tsx               # Root layout with wallet providers
 ├── public/                      # Static assets
 └── package.json                 # Dependencies and scripts
@@ -119,7 +117,6 @@ lst-centralized-platform/
 | `/` | Educational Landing Page | Learn what LSTs are and how they work |
 | `/LST` | Staking Learning Demo | Interactive staking education with yield sliders |
 | `/unstake` | Unstaking Learning Demo | Interactive unstaking education with yield effects |
-| `/monitor` | Developer Tools | Real-time webhook events for development |
 
 ### Backend API Routes
 
@@ -195,9 +192,9 @@ graph TD
 ### Real-Time Learning Tools (For Developers)
 
 1. **Server**: Webhook events stored in memory for analysis
-2. **Client**: Monitor page polls `/api/webhook-events` to see live data
-3. **Client**: Displays transaction feed for learning purposes
-4. **Client**: Shows processing times and blockchain confirmations
+2. **Client**: Use browser developer tools to inspect API responses from `/api/webhook-events`
+3. **Client**: Check browser console for transaction processing logs
+4. **Client**: View network tab to see real-time API calls and responses
 
 ## 🔐 Educational Safety Features
 
@@ -250,20 +247,20 @@ const solAmount = rsolAmount * unstakingRatio;
 1. **Start with the Landing Page**: Visit `/` to understand what LSTs are
 2. **Explore Staking**: Go to `/LST` and play with the yield slider
 3. **Learn Unstaking**: Visit `/unstake` to understand token redemption
-4. **See Live Data**: Check `/monitor` to see real blockchain transactions
+4. **Check API Responses**: Use browser developer tools to see real blockchain data
 5. **Ask Questions**: Use the explanations and tooltips throughout
 
 ### For Developers & Educators
 1. **Study the Code**: Examine how LST protocols work under the hood
 2. **Modify Parameters**: Change yield ranges and see the effects
-3. **Monitor Transactions**: Use the monitor page to see webhook data
+3. **Inspect API Calls**: Use browser dev tools to see webhook data and API responses
 4. **Extend Features**: Add new educational components or explanations
 
 ### For Blockchain Enthusiasts
 1. **Understand Mathematics**: See the formulas behind LST protocols
 2. **Experience Real Transactions**: Execute real devnet transactions safely
 3. **Learn Best Practices**: Discover transaction uniqueness and error handling
-4. **Explore Advanced Features**: Dive into webhook monitoring and state management
+4. **Explore API Endpoints**: Use `/api/webhook-events` to see real-time transaction data
 
 ## 🚀 Setup Instructions (For Educators & Developers)
 
@@ -368,7 +365,7 @@ solana-keygen new --outfile educational-wallet.json
    - Connect wallet to devnet (free test tokens)
    - Start with small amounts (0.1 SOL)
    - Experiment with different yield percentages
-   - Watch the monitor page to see real transaction data
+   - Watch browser developer tools to see real transaction data
 
 3. **Learn Unstaking Process**:
    - Navigate to `/unstake` educational demo
@@ -387,7 +384,7 @@ curl -X POST http://localhost:3000/api/webhook \
 # Check student balance for demos
 curl "http://localhost:3000/api/rsol-balance?wallet=STUDENT_WALLET_ADDRESS"
 
-# Monitor educational transactions
+# Monitor educational transactions via API
 curl "http://localhost:3000/api/webhook-events"
 ```
 
@@ -476,13 +473,13 @@ npm run build
 2. Get free devnet SOL from faucets
 3. Start with small amounts (0.1 SOL)
 4. Clear browser cache if issues persist
-5. Check monitor page for transaction status
+5. Check `/api/webhook-events` endpoint or browser console for transaction status
 ```
 
 **4. "Can't see my RSOL tokens" - Learning Support**
 ```bash
 # Educational troubleshooting:
-1. Check if staking transaction completed on /monitor
+1. Check if staking transaction completed via `/api/webhook-events`
 2. Verify you're looking at devnet, not mainnet
 3. Refresh wallet or check rsol-balance API
 4. Remember: this is educational devnet, not real tokens
@@ -565,8 +562,8 @@ solana confirm TRANSACTION_SIGNATURE
 # Enable debug logging
 NODE_ENV=development npm run dev
 
-# Monitor webhook events
-# Visit /monitor page for real-time events
+# Check webhook events via API endpoint
+curl "http://localhost:3000/api/webhook-events"
 
 # Check browser console for detailed logs
 # Client-side errors appear in browser console
