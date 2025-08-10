@@ -338,7 +338,7 @@ async function mintRSOLTokens(recipientAddress: string, solAmount: number, txSig
       console.log(`⚠️ [${requestId}] No stored ratio found for ${recipientAddress}, using default 1:1`);
     }
     
-    const tokensToMint = Math.floor(solAmount * ratio); // Apply the ratio
+    const tokensToMint = Math.floor(solAmount / ratio); // Apply the ratio
 
     console.log(`⚡ [${requestId}] Adding mint instruction for ${tokensToMint / 1e9} RSOL tokens at ${ratio.toFixed(3)}x ratio...`);
     const mintInstruction = createMintToInstruction(
