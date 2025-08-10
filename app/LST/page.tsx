@@ -250,80 +250,107 @@ export default function LST(){
     }
 
     return (
-        <div className="min-h-screen bg-gray-50">
+        <div className="min-h-screen bg-gradient-to-br from-indigo-50 to-blue-100">
             <Navigation />
             <StakingLoader show={isStaking} />
-            
-            <div className="container mx-auto px-4 py-16">
-                {!wallet.connected ? (
-                    <div className="max-w-md mx-auto mt-10 p-8 rounded-xl shadow-lg bg-white text-center">
-                        <h2 className="mb-4 text-gray-800 text-xl font-semibold">Connect Wallet</h2>
-                        <p className="text-gray-600">
-                            Connect your wallet first, then you can stake your SOL.
-                        </p>
-                    </div>
-                ) : (
-                    <div className="max-w-md mx-auto mt-10 p-8 rounded-xl shadow-lg bg-white">
-                        <h2 className="mb-6 text-gray-800 text-xl font-semibold">Stake SOL for RSOL</h2>
-                        
-                        {/* SOL to RSOL Ratio Component */}
-                        <SOL_to_RSOL 
-                            solAmount={parseFloat(amount) || 0} 
-                            onYieldChange={handleYieldChange}
-                        />
-                        
-                        {message && (
-                            <div className={`p-3 rounded-md mb-5 text-sm ${
-                                message.includes('failed') || message.includes('❌') 
-                                    ? 'bg-red-100 text-red-700' 
-                                    : 'bg-green-100 text-green-700'
-                            }`}>
-                                {message}
-                            </div>
-                        )}
 
-                        <form onSubmit={handleStaking}>
-                            <label htmlFor="sol-amount" className="block mb-2 text-gray-600">
-                                Amount in SOL
-                            </label>
-                            <input
-                                id="sol-amount"
-                                type="number"
-                                min="0"
-                                step="any"
-                                placeholder="Enter SOL you want to stake"
-                                value={amount}
-                                onChange={e => setAmount(e.target.value)}
-                                disabled={isStaking}
-                                className={`w-full p-3 rounded-md border-2 border-gray-300 bg-white text-gray-900 mb-5 text-base outline-none transition-colors focus:border-indigo-500 ${
-                                    isStaking ? 'opacity-60' : ''
-                                }`}
-                            />
-                            <button
-                                type="submit"
-                                disabled={isStaking || !amount || parseFloat(amount) <= 0}
-                                className={`w-full p-3 rounded-md border-none text-white font-semibold text-base transition-colors ${
-                                    isStaking || !amount || parseFloat(amount) <= 0
-                                        ? 'bg-gray-400 cursor-not-allowed' 
-                                        : 'bg-indigo-500 hover:bg-indigo-600 cursor-pointer'
-                                }`}
-                            >
-                                {isStaking ? 'Staking...' : `Stake ${amount || '0'} SOL → Get ${expectedRSOL.toFixed(6)} RSOL (${currentRatio.toFixed(3)}x)`}
-                            </button>
-                        </form>
-                        
-                        <div className="mt-5 p-3 bg-gray-100 rounded-md">
-                            <h4 className="mb-2 text-gray-700 text-sm font-medium">How it works:</h4>
-                            <p className="text-gray-600 text-xs leading-relaxed">
-                                1. Adjust the ratio slider to select your conversion rate<br/>
-                                2. Send SOL to our staking contract<br/>
-                                3. Receive RSOL tokens based on your selected ratio<br/>
-                                4. RSOL represents your staked SOL and earns rewards
-                            </p>
-                        </div>
+            {/* Hero Section */}
+            <section className="w-full py-20 flex flex-col items-center justify-center text-center">
+                <h1 className="text-4xl md:text-5xl font-extrabold text-indigo-700 mb-4">Learn & Demo Liquid Staking Tokens (LST)</h1>
+                <p className="max-w-2xl text-lg md:text-xl text-gray-700 mb-8">Explore how LSTs work, stake SOL to mint RSOL, and see the protocol in action. This page is designed for learning and demonstration purposes.</p>
+                <div className="flex flex-col md:flex-row gap-8 items-center justify-center mt-8">
+                    <div className="max-w-md text-left">
+                        <h2 className="text-2xl font-bold text-indigo-600 mb-2">What is an LST?</h2>
+                        <p className="text-gray-600 mb-2">Liquid Staking Tokens (LSTs) represent staked assets (like SOL) that continue to earn yield while remaining liquid and transferable. You can stake SOL to mint RSOL, and later unstake RSOL to redeem SOL.</p>
+                        <ul className="list-disc ml-5 text-gray-600">
+                            <li>Stake SOL → Mint RSOL</li>
+                            <li>RSOL earns yield, is tradable</li>
+                            <li>Unstake RSOL → Redeem SOL</li>
+                        </ul>
                     </div>
-                )}
-            </div>
+                </div>
+            </section>
+
+            {/* Step-by-step Demo Section */}
+            <section className="w-full py-12 flex flex-col items-center bg-white bg-opacity-80">
+                <h2 className="text-2xl font-bold text-indigo-700 mb-6">Try Staking & Unstaking</h2>
+                <div className="max-w-xl w-full bg-white rounded-xl shadow-lg p-8">
+                    <SOL_to_RSOL 
+                        solAmount={parseFloat(amount) || 0} 
+                        onYieldChange={handleYieldChange}
+                    />
+                    {message && (
+                        <div className={`p-3 rounded-md mb-5 text-sm ${
+                            message.includes('failed') || message.includes('❌') 
+                                ? 'bg-red-100 text-red-700' 
+                                : 'bg-green-100 text-green-700'
+                        }`}>
+                            {message}
+                        </div>
+                    )}
+                    <form onSubmit={handleStaking}>
+                        <label htmlFor="sol-amount" className="block mb-2 text-gray-600">
+                            Amount in SOL
+                        </label>
+                        <input
+                            id="sol-amount"
+                            type="number"
+                            min="0"
+                            step="any"
+                            placeholder="Enter SOL you want to stake"
+                            value={amount}
+                            onChange={e => setAmount(e.target.value)}
+                            disabled={isStaking}
+                            className={`w-full p-3 rounded-md border-2 border-gray-300 bg-white text-gray-900 mb-5 text-base outline-none transition-colors focus:border-indigo-500 ${
+                                isStaking ? 'opacity-60' : ''
+                            }`}
+                        />
+                        <button
+                            type="submit"
+                            disabled={isStaking || !amount || parseFloat(amount) <= 0}
+                            className={`w-full p-3 rounded-md border-none text-white font-semibold text-base transition-colors ${
+                                isStaking || !amount || parseFloat(amount) <= 0
+                                    ? 'bg-gray-400 cursor-not-allowed' 
+                                    : 'bg-indigo-500 hover:bg-indigo-600 cursor-pointer'
+                            }`}
+                        >
+                            {isStaking ? 'Staking...' : `Stake ${amount || '0'} SOL → Get ${expectedRSOL.toFixed(6)} RSOL (${currentRatio.toFixed(3)}x)`}
+                        </button>
+                    </form>
+                </div>
+                <div className="max-w-2xl mt-10 text-gray-700 text-base text-center">
+                    <h3 className="text-lg font-semibold text-indigo-600 mb-2">How does it work?</h3>
+                    <ol className="list-decimal ml-5 text-left">
+                        <li>Choose your yield and stake SOL to mint RSOL tokens.</li>
+                        <li>RSOL tokens represent your staked SOL and earn yield.</li>
+                        <li>Unstake RSOL to redeem SOL at the current protocol ratio.</li>
+                        <li>All actions are simulated for learning—no real funds required.</li>
+                    </ol>
+                </div>
+            </section>
+
+            {/* FAQ / Educational Section */}
+            <section className="w-full py-12 flex flex-col items-center bg-indigo-50">
+                <h2 className="text-2xl font-bold text-indigo-700 mb-6">LST FAQ & Learning</h2>
+                <div className="max-w-3xl grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div>
+                        <h4 className="font-semibold text-indigo-600 mb-2">What is RSOL?</h4>
+                        <p className="text-gray-700">RSOL is a liquid staking token representing staked SOL. It can be traded, transferred, and redeemed for SOL at any time.</p>
+                    </div>
+                    <div>
+                        <h4 className="font-semibold text-indigo-600 mb-2">Why use LSTs?</h4>
+                        <p className="text-gray-700">LSTs allow you to earn staking rewards while keeping your assets liquid and usable in DeFi protocols.</p>
+                    </div>
+                    <div>
+                        <h4 className="font-semibold text-indigo-600 mb-2">Is this a real protocol?</h4>
+                        <p className="text-gray-700">This page is for demonstration and learning only. No real funds are used or required.</p>
+                    </div>
+                    <div>
+                        <h4 className="font-semibold text-indigo-600 mb-2">How is yield calculated?</h4>
+                        <p className="text-gray-700">Yield is set by you for demonstration. The protocol ratio determines how much RSOL you get per SOL staked.</p>
+                    </div>
+                </div>
+            </section>
         </div>
     );
 }

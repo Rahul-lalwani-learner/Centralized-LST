@@ -199,7 +199,6 @@ export default function Unstake() {
     return (
         <div className="min-h-screen bg-gradient-to-br from-slate-50 to-orange-50">
             <Navigation />
-            
             <main className="container mx-auto px-4 py-8">
                 {/* Hero Section */}
                 <div className="text-center py-12 mb-12">
@@ -208,7 +207,6 @@ export default function Unstake() {
                             <span className="w-2 h-2 bg-orange-500 rounded-full mr-2 animate-pulse"></span>
                             Unstaking Interface
                         </div>
-                        
                         <h1 className="text-5xl md:text-6xl font-bold text-gray-900 mb-6 bg-gradient-to-r from-orange-600 to-red-600 bg-clip-text text-transparent">
                             Unstake RSOL
                         </h1>
@@ -219,9 +217,22 @@ export default function Unstake() {
                             Burn your RSOL tokens and receive SOL back based on your selected unstaking ratio. 
                             Choose conservative for safety or aggressive for higher returns.
                         </p>
+                        {/* Unstaking Demo & Details */}
+                        <div className="max-w-xl w-full bg-white rounded-xl shadow-lg p-8 mx-auto mt-8">
+                            <h3 className="text-xl font-bold text-indigo-600 mb-4">Unstaking Demo</h3>
+                            <ul className="list-disc ml-5 text-gray-600 mb-4 text-left">
+                                <li>Enter the amount of RSOL you want to unstake.</li>
+                                <li>Select your desired yield (affects the ratio).</li>
+                                <li>See how much SOL you will receive for your RSOL.</li>
+                                <li>Unstaking is instant and simulated for learning—no real funds required.</li>
+                            </ul>
+                            <div className="bg-indigo-50 rounded-md p-4 text-indigo-700 text-sm">
+                                <strong>Protocol Logic:</strong><br/>
+                                When you unstake, the protocol calculates SOL = RSOL × (1 + yield/100). Higher yield means you get more SOL per RSOL, simulating real-world LST redemption.
+                            </div>
+                        </div>
                     </div>
                 </div>
-
                 {/* Unstaking Interface */}
                 <div className="max-w-4xl mx-auto grid md:grid-cols-2 gap-8">
                     {/* Left Column - Unstaking Controls */}
@@ -230,7 +241,6 @@ export default function Unstake() {
                             onYieldChange={handleYieldChange}
                             rsolBalance={rsolBalance}
                         />
-                        
                         {/* Unstake Button */}
                         <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg border border-white/20 p-6">
                             <button
@@ -250,7 +260,6 @@ export default function Unstake() {
                             </button>
                         </div>
                     </div>
-
                     {/* Right Column - Information and Status */}
                     <div className="space-y-6">
                         {/* Balance Information */}
@@ -279,7 +288,6 @@ export default function Unstake() {
                                 )}
                             </div>
                         </div>
-
                         {/* Transaction Status */}
                         {message && (
                             <div className={`p-4 rounded-xl text-sm leading-relaxed ${
@@ -294,7 +302,6 @@ export default function Unstake() {
                                 </div>
                             </div>
                         )}
-
                         {/* How Unstaking Works */}
                         <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg border border-white/20 p-6">
                             <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
@@ -322,7 +329,6 @@ export default function Unstake() {
                                 </div>
                             </div>
                         </div>
-
                         {/* Risk Information */}
                         <div className="bg-gradient-to-r from-amber-50 to-orange-50 rounded-2xl p-6 border border-amber-100">
                             <h3 className="text-lg font-semibold text-amber-900 mb-4 flex items-center">
