@@ -42,8 +42,8 @@ export default function LST(){
     // Update expected RSOL when amount changes
     useEffect(() => {
         if (parseFloat(amount) > 0) {
-            const newExpectedRSOL = parseFloat(amount) * currentRatio;
-            console.log(`📊 Amount changed: ${amount} SOL × ${currentRatio.toFixed(3)} = ${newExpectedRSOL.toFixed(6)} RSOL`);
+            const newExpectedRSOL = parseFloat(amount) / currentRatio;
+            console.log(`📊 Amount changed: ${amount} SOL ÷ ${currentRatio.toFixed(3)} = ${newExpectedRSOL.toFixed(6)} RSOL`);
             setExpectedRSOL(newExpectedRSOL);
         } else {
             setExpectedRSOL(0);
