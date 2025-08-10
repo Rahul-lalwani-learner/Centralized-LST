@@ -1,41 +1,51 @@
-# RSOL - Centralized Liquid Staking Platform
+# RSOL - Liquid Staking Learning Platform
 
-A comprehensive centralized liquid staking token (LST) platform for Solana devnet that provides flexible ratio-based staking and unstaking with automated token management.
+A comprehensive **educational and demonstration platform** for understanding Liquid Staking Tokens (LSTs) on Solana. This platform allows users to learn, visualize, and interact with yield-based staking and unstaking mechanics through hands-on demos.
 
 ## 🎯 What is This Platform?
 
-This is a **full-stack decentralized finance (DeFi) application** that allows users to:
+This is a **learning-focused DeFi application** designed to help users understand LST protocols by:
 
-1. **Stake SOL** and receive **RSOL tokens** at customizable ratios
-2. **Unstake RSOL** and receive **SOL back** based on selected conversion rates
-3. **Monitor transactions** in real-time with webhook integration
-4. **Flexible ratio system** - choose conservative (1:1) to aggressive (2:1) conversion rates
+1. **Interactive Staking Demo** - Stake SOL with adjustable yield (0-20%) to see how RSOL is minted
+2. **Interactive Unstaking Demo** - Unstake RSOL with adjustable yield to see how SOL is returned
+3. **Real-time Protocol Logic** - Watch yield changes affect staking/unstaking ratios instantly
+4. **Educational Content** - Comprehensive explanations of LST mechanics and protocol logic
+5. **Risk-free Learning** - All demos work on Solana devnet with no real funds at risk
 
 ### 🔄 Platform Flow
 
 ```
-User Staking Flow:
-SOL → [Ratio Selection] → [Webhook Processing] → RSOL Tokens
+Learning Flow:
+Landing Page → Choose Demo → Adjust Yield → See Protocol Logic → Understand LSTs
 
-User Unstaking Flow:
-RSOL → [Burn Transaction] → [Server Verification] → SOL Transfer
+Staking Demo:
+SOL Input → Yield Slider (0-20%) → RSOL = SOL / (1 + yield/100) → Mint RSOL
+
+Unstaking Demo:
+RSOL Input → Yield Slider (0-20%) → SOL = RSOL × (1 + yield/100) → Redeem SOL
 ```
 
 ## 🏗️ Architecture Overview
 
 ### Frontend (Client-Side)
-- **Next.js 15** with App Router
-- **React 19** with hooks and modern patterns
-- **TypeScript** for type safety
-- **Tailwind CSS** for responsive design
-- **Solana Wallet Adapter** for wallet integration
+- **Next.js 15** with App Router for modern React patterns
+- **React 19** with hooks and interactive components
+- **TypeScript** for type safety and better development experience
+- **Tailwind CSS** for responsive, modern UI design
+- **Solana Wallet Adapter** for seamless wallet integration
 
 ### Backend (Server-Side)
-- **Next.js API Routes** for serverless functions
-- **Solana Web3.js** for blockchain interactions
+- **Next.js API Routes** for serverless backend functions
+- **Solana Web3.js** for blockchain interactions and transactions
 - **SPL Token (Token-2022)** for advanced token operations
 - **Helius Webhooks** for real-time transaction monitoring
-- **In-memory store** for temporary request management
+- **In-memory stores** for demo state management
+
+### Educational Layer
+- **Interactive yield sliders** for real-time protocol logic visualization
+- **Live calculations** showing RSOL/SOL conversions as yield changes
+- **Step-by-step explanations** of staking and unstaking processes
+- **Risk-free demos** using Solana devnet for safe learning
 
 ### Blockchain Layer
 - **Solana Devnet** for testing and development
@@ -45,25 +55,29 @@ RSOL → [Burn Transaction] → [Server Verification] → SOL Transfer
 
 ## 🚀 Key Features
 
-### ✅ Flexible Ratio Staking
-- **Dynamic Ratios**: 1.0x (conservative) to 2.0x (aggressive)
-- **Real-time Calculation**: See expected RSOL before staking
-- **Customizable Returns**: Higher ratios = more RSOL tokens
+### ✅ Educational Yield-Based Staking
+- **Interactive Yield Slider**: Adjust yield from 0% to 20% and see instant protocol logic
+- **Real-time Calculations**: Watch RSOL amount change as you modify yield percentage
+- **Protocol Transparency**: Formula shown: `RSOL = SOL / (1 + yield/100)`
+- **Visual Learning**: Immediate feedback on how yield affects token minting
 
-### ✅ Two-Step Secure Unstaking
-- **User Signs Burn**: Users sign their own token burn transactions
-- **Server Verification**: Backend verifies burn before SOL transfer
-- **Ratio-Based Returns**: SOL returned based on unstaking ratio selected
+### ✅ Educational Yield-Based Unstaking
+- **Interactive Unstaking Demo**: Select RSOL amount and adjust yield to see SOL return
+- **Live Protocol Logic**: Watch SOL calculation change: `SOL = RSOL × (1 + yield/100)`
+- **Two-Step Process**: Learn about burn transactions and verification steps
+- **Risk Education**: Understand how yield affects returns in LST protocols
 
-### ✅ Real-Time Transaction Monitoring
-- **Webhook Integration**: Automatic detection of SOL transfers
-- **Live Updates**: Frontend polls for minting status
-- **Transaction Logging**: Complete audit trail of all operations
+### ✅ Comprehensive Learning Experience
+- **Landing Page**: Clear explanation of what LSTs are and how they work
+- **Step-by-step Guidance**: Detailed instructions for each demo
+- **FAQ Section**: Answers to common questions about LSTs and yield
+- **Protocol Logic Explanations**: Deep dive into the mathematics behind LSTs
 
-### ✅ Advanced Transaction Management
-- **Unique Transaction IDs**: Memo instructions prevent duplicate transactions
-- **Cache-Busting**: Advanced RPC options to avoid "already processed" errors
-- **Retry Logic**: Automatic retry with exponential backoff
+### ✅ Real Transaction Demos
+- **Solana Devnet Integration**: Real blockchain transactions without financial risk
+- **Webhook Monitoring**: See how real LST platforms detect and process transactions
+- **Transaction Uniqueness**: Learn about memo instructions and cache-busting techniques
+- **Error Handling**: Understand common issues and how protocols handle them
 
 ## 📁 Project Structure
 
@@ -72,23 +86,24 @@ lst-centralized-platform/
 ├── app/                          # Next.js App Router
 │   ├── api/                      # Backend API Routes
 │   │   ├── webhook/             # Helius webhook handler
-│   │   ├── stake-request/       # Store staking ratios
+│   │   ├── stake-request/       # Store yield parameters
 │   │   ├── prepare-unstake/     # Prepare burn transactions
 │   │   ├── confirm-unstake/     # Verify and send SOL
 │   │   ├── rsol-balance/        # Check RSOL balances
 │   │   └── webhook-events/      # Transaction monitoring
 │   ├── components/              # React Components
 │   │   ├── Navigation.tsx       # Header navigation
-│   │   ├── SOL_to_RSOL.tsx     # Staking ratio selector
-│   │   └── RSOL_to_SOL.tsx     # Unstaking ratio selector
+│   │   ├── SOL_to_RSOL.tsx     # Educational staking demo
+│   │   ├── RSOL_to_SOL.tsx     # Educational unstaking demo
+│   │   └── StakingLoader.tsx    # Loading component with blur backdrop
 │   ├── lib/                     # Utility Libraries
 │   │   ├── stakeStore.ts        # In-memory request store
 │   │   └── webhookStore.ts      # Webhook event storage
-│   ├── LST/                     # Staking Page
-│   │   └── page.tsx             # Main staking interface
-│   ├── unstake/                 # Unstaking Page
-│   │   └── page.tsx             # Unstaking interface
-│   ├── monitor/                 # Monitoring Dashboard
+│   ├── LST/                     # Educational Staking Demo
+│   │   └── page.tsx             # Interactive staking learning experience
+│   ├── unstake/                 # Educational Unstaking Demo
+│   │   └── page.tsx             # Interactive unstaking learning experience
+│   ├── monitor/                 # Development Tools
 │   │   └── page.tsx             # Real-time transaction monitor
 │   └── layout.tsx               # Root layout with wallet providers
 ├── public/                      # Static assets
@@ -101,17 +116,17 @@ lst-centralized-platform/
 
 | Route | Purpose | Description |
 |-------|---------|-------------|
-| `/` | Home Page | Landing page with platform overview |
-| `/LST` | Staking Interface | Stake SOL → Receive RSOL |
-| `/unstake` | Unstaking Interface | Burn RSOL → Receive SOL |
-| `/monitor` | Transaction Monitor | Real-time webhook events |
+| `/` | Educational Landing Page | Learn what LSTs are and how they work |
+| `/LST` | Staking Learning Demo | Interactive staking education with yield sliders |
+| `/unstake` | Unstaking Learning Demo | Interactive unstaking education with yield effects |
+| `/monitor` | Developer Tools | Real-time webhook events for development |
 
 ### Backend API Routes
 
 | Endpoint | Method | Purpose | Client/Server |
 |----------|--------|---------|---------------|
 | `/api/webhook` | POST | Helius webhook receiver | **Server** |
-| `/api/stake-request` | POST | Store staking ratios | **Client → Server** |
+| `/api/stake-request` | POST | Store yield parameters | **Client → Server** |
 | `/api/prepare-unstake` | POST | Create burn transactions | **Client → Server** |
 | `/api/confirm-unstake` | POST | Verify burn & send SOL | **Client → Server** |
 | `/api/rsol-balance` | GET | Check user RSOL balance | **Client → Server** |
@@ -119,140 +134,170 @@ lst-centralized-platform/
 
 ## 🔄 Request Flow Diagrams
 
-### Staking Flow
+### Educational Staking Flow
 ```mermaid
 graph TD
-    A[User Selects Ratio] --> B[Store Ratio in Memory]
-    B --> C[User Signs SOL Transfer]
-    C --> D[Transaction Sent to Blockchain]
-    D --> E[Helius Webhook Triggered]
-    E --> F[Server Retrieves Stored Ratio]
-    F --> G[Mint RSOL Tokens]
-    G --> H[Frontend Polls for Success]
-    H --> I[Display Success Message]
+    A[Learner Adjusts Yield Slider] --> B[See Live RSOL Calculation]
+    B --> C[Understand Formula: RSOL = SOL / (1 + yield/100)]
+    C --> D[Optional: Execute Real Transaction]
+    D --> E[Store Yield Parameters]
+    E --> F[User Signs SOL Transfer]
+    F --> G[Transaction Sent to Blockchain]
+    G --> H[Helius Webhook Triggered]
+    H --> I[Server Retrieves Yield Parameters]
+    I --> J[Mint RSOL Using Yield Formula]
+    J --> K[Frontend Shows Transaction Success]
 ```
 
-### Unstaking Flow
+### Educational Unstaking Flow
 ```mermaid
 graph TD
-    A[User Selects RSOL Amount] --> B[Call /api/prepare-unstake]
-    B --> C[Server Creates Burn Transaction]
-    C --> D[User Signs Burn Transaction]
-    D --> E[Send Burn to Blockchain]
-    E --> F[Call /api/confirm-unstake]
-    F --> G[Server Verifies Burn]
-    G --> H[Server Sends SOL]
-    H --> I[Display Success with TX IDs]
+    A[Learner Selects RSOL Amount] --> B[Adjust Yield to See SOL Return]
+    B --> C[Understand Formula: SOL = RSOL × (1 + yield/100)]
+    C --> D[Optional: Execute Real Transaction]
+    D --> E[Call /api/prepare-unstake]
+    E --> F[Server Creates Burn Transaction]
+    F --> G[User Signs Burn Transaction]
+    G --> H[Send Burn to Blockchain]
+    H --> I[Call /api/confirm-unstake]
+    I --> J[Server Verifies Burn]
+    J --> K[Server Sends SOL Using Yield Formula]
+    K --> L[Display Success with TX IDs]
 ```
 
 ## 🛠️ Technical Implementation
 
-### Staking Process (Client-Side → Server-Side)
+### Educational Staking Process (Learn → Experience → Understand)
 
-1. **Client**: User adjusts ratio slider on `/LST` page
-2. **Client**: Calls `/api/stake-request` to store ratio
-3. **Client**: Signs SOL transfer transaction with unique memo
-4. **Server**: Helius webhook receives transaction notification
-5. **Server**: Retrieves stored ratio from memory
-6. **Server**: Mints RSOL tokens using Token-2022 program
-7. **Client**: Polls `/api/webhook-events` for completion status
+1. **Learning Phase**: User explores yield slider on `/LST` page and sees live calculations
+2. **Understanding**: Formula `RSOL = SOL / (1 + yield/100)` explained with examples
+3. **Optional Demo**: User can execute real transaction to see the process
+4. **Client**: Calls `/api/stake-request` to store yield parameters
+5. **Client**: Signs SOL transfer transaction with unique memo
+6. **Server**: Helius webhook receives transaction notification
+7. **Server**: Retrieves stored yield parameters from memory
+8. **Server**: Mints RSOL tokens using yield-based formula
+9. **Client**: Shows transaction success and explains what happened
 
-### Unstaking Process (Client-Side ↔ Server-Side)
+### Educational Unstaking Process (Learn → Practice → Master)
 
-1. **Client**: User selects RSOL amount on `/unstake` page
-2. **Client**: Calls `/api/prepare-unstake` with burn details
-3. **Server**: Creates burn transaction with fresh blockhash
-4. **Client**: User signs burn transaction
-5. **Client**: Sends burn transaction to blockchain
-6. **Client**: Calls `/api/confirm-unstake` with burn signature
-7. **Server**: Verifies burn transaction completed
-8. **Server**: Sends SOL from platform wallet to user
+1. **Learning Phase**: User adjusts yield on `/unstake` page to see SOL return changes
+2. **Understanding**: Formula `SOL = RSOL × (1 + yield/100)` demonstrated interactively  
+3. **Optional Demo**: User can execute real burn transaction
+4. **Client**: Calls `/api/prepare-unstake` with burn details
+5. **Server**: Creates burn transaction with fresh blockhash
+6. **Client**: User signs burn transaction and sends to blockchain
+7. **Client**: Calls `/api/confirm-unstake` with burn signature
+8. **Server**: Verifies burn transaction completed
+9. **Server**: Sends SOL using yield-based calculation
+10. **Client**: Shows success and explains the complete process
 
-### Real-Time Monitoring (Server-Side → Client-Side)
+### Real-Time Learning Tools (For Developers)
 
-1. **Server**: Webhook events stored in memory
-2. **Client**: Monitor page polls `/api/webhook-events`
-3. **Client**: Displays live transaction feed
-4. **Client**: Shows processing status and completion times
+1. **Server**: Webhook events stored in memory for analysis
+2. **Client**: Monitor page polls `/api/webhook-events` to see live data
+3. **Client**: Displays transaction feed for learning purposes
+4. **Client**: Shows processing times and blockchain confirmations
 
-## 🔐 Security Features
+## 🔐 Educational Safety Features
 
-### Transaction Security
-- **User Signatures**: Users sign their own burn transactions
-- **Server Verification**: Backend verifies all burns before SOL transfer
-- **Unique Memos**: Prevent transaction replay attacks
-- **Fresh Blockhashes**: Avoid "already processed" errors
+### Learning Without Risk
+- **Devnet Only**: All transactions use Solana devnet (no real money)
+- **Educational Focus**: Clear explanations that this is for learning
+- **Safe Exploration**: Users can experiment without financial consequences
+- **Real Protocol Logic**: Authentic LST mechanics without real financial risk
 
-### Data Security
-- **Environment Variables**: Sensitive data in server environment only
+### Transaction Transparency  
+- **Visible Formulas**: All yield calculations shown to users
+- **Step-by-step Process**: Each action explained in detail
+- **Transaction IDs**: Real blockchain transactions for authentic learning
+- **Error Education**: Learn about common blockchain transaction issues
+
+### Development Security
+- **Environment Variables**: Sensitive data properly secured
 - **Private Key Management**: Platform wallet keys secured server-side
 - **No Client Secrets**: Zero sensitive data exposed to frontend
+- **Fresh Blockhashes**: Prevent transaction processing issues
 
-### Blockchain Security
-- **Token-2022**: Advanced token program with enhanced security
-- **Devnet Only**: Safe testing environment
-- **Transaction Logging**: Complete audit trail
+## 📊 Educational Features Deep Dive
 
-## 📊 Advanced Features
-
-### Ratio Management System
+### Yield-Based Learning System
 ```typescript
-// Conservative to Aggressive ratio selection
-const ratioOptions = {
-  conservative: 1.0,  // 1 SOL → 1 RSOL
-  moderate: 1.5,      // 1 SOL → 1.5 RSOL
-  aggressive: 2.0     // 1 SOL → 2 RSOL
-}
+// Educational yield-to-ratio conversion for staking
+const stakingRatio = 1 + (yield / 100);
+const rsolAmount = solAmount / stakingRatio;
+
+// Educational yield-to-ratio conversion for unstaking  
+const unstakingRatio = 1 + (yield / 100);
+const solAmount = rsolAmount * unstakingRatio;
 ```
 
-### Transaction Uniqueness
-```typescript
-// Unique memo generation
-const memo = `stake-${timestamp}-${randomId}-${blockhash}`
-```
+### Interactive Learning Components
+- **Live Calculation Updates**: See RSOL amounts change as you adjust yield
+- **Formula Visualization**: Mathematical formulas shown alongside sliders
+- **Educational Tooltips**: Hover explanations for complex concepts
+- **Step-by-step Guidance**: Clear instructions for each demo phase
 
-### Cache-Busting RPC Options
-```typescript
-const txOptions = {
-  skipPreflight: true,
-  preflightCommitment: 'finalized',
-  maxRetries: 5
-}
-```
+### Real-World Protocol Simulation
+- **Authentic LST Logic**: Same mathematics used by real LST protocols
+- **Blockchain Integration**: Real transactions on Solana devnet
+- **Webhook Monitoring**: Experience how platforms detect user transactions
+- **Error Handling**: Learn about common blockchain issues and solutions
 
-## 🚀 Setup Instructions
+## 🛠️ How to Use This Educational Platform
+
+### For Learners & Students
+1. **Start with the Landing Page**: Visit `/` to understand what LSTs are
+2. **Explore Staking**: Go to `/LST` and play with the yield slider
+3. **Learn Unstaking**: Visit `/unstake` to understand token redemption
+4. **See Live Data**: Check `/monitor` to see real blockchain transactions
+5. **Ask Questions**: Use the explanations and tooltips throughout
+
+### For Developers & Educators
+1. **Study the Code**: Examine how LST protocols work under the hood
+2. **Modify Parameters**: Change yield ranges and see the effects
+3. **Monitor Transactions**: Use the monitor page to see webhook data
+4. **Extend Features**: Add new educational components or explanations
+
+### For Blockchain Enthusiasts
+1. **Understand Mathematics**: See the formulas behind LST protocols
+2. **Experience Real Transactions**: Execute real devnet transactions safely
+3. **Learn Best Practices**: Discover transaction uniqueness and error handling
+4. **Explore Advanced Features**: Dive into webhook monitoring and state management
+
+## 🚀 Setup Instructions (For Educators & Developers)
 
 ### Prerequisites
 
-- **Node.js 18+** - JavaScript runtime
-- **Solana Wallet** - Phantom, Solflare, etc.
-- **Devnet SOL** - For testing transactions
-- **Helius Account** - For webhook integration
-- **Alchemy Account** - For RPC endpoints
+- **Node.js 18+** - JavaScript runtime for development
+- **Solana Wallet** - Phantom, Solflare, etc. for testing
+- **Devnet SOL** - Free testnet tokens for safe learning
+- **Helius Account** - For webhook integration (educational)
+- **Alchemy Account** - For reliable RPC endpoints
 
 ### Environment Variables
 
-Create a `.env.local` file in the root directory:
+Create a `.env.local` file for educational setup:
 
 ```env
-# Solana RPC Endpoint
+# Educational Blockchain Access
 NEXT_PUBLIC_ALCHEMY_DEVNET_ENDPOINT=https://solana-devnet.g.alchemy.com/v2/YOUR_API_KEY
 
-# Platform Wallet Configuration
-WALLET_PUBLIC_KEY=YOUR_PLATFORM_WALLET_PUBLIC_KEY
-NEXT_PUBLIC_WALLET_PUBLIC_KEY=YOUR_PLATFORM_WALLET_PUBLIC_KEY
-WALLET_PRIVATE_KEY=YOUR_PLATFORM_WALLET_PRIVATE_KEY_BASE58
+# Demo Platform Wallet Configuration  
+WALLET_PUBLIC_KEY=YOUR_EDUCATIONAL_WALLET_PUBLIC_KEY
+NEXT_PUBLIC_WALLET_PUBLIC_KEY=YOUR_EDUCATIONAL_WALLET_PUBLIC_KEY
+WALLET_PRIVATE_KEY=YOUR_EDUCATIONAL_WALLET_PRIVATE_KEY_BASE58
 
-# RSOL Token Configuration
-TOKEN_MINT_ADDRESS=YOUR_RSOL_TOKEN_MINT_ADDRESS
+# Educational Token Configuration
+TOKEN_MINT_ADDRESS=YOUR_DEMO_RSOL_TOKEN_MINT_ADDRESS
 
-# Application URL
+# Development URL
 NEXT_PUBLIC_BASE_URL=http://localhost:3000
 ```
 
-### Installation & Development
+### Quick Start for Learning
 
-1. **Clone the repository**:
+1. **Clone the educational platform**:
    ```bash
    git clone <repository-url>
    cd lst-centralized-platform
@@ -263,88 +308,86 @@ NEXT_PUBLIC_BASE_URL=http://localhost:3000
    npm install
    ```
 
-3. **Set up environment variables**:
+3. **Set up educational environment**:
    ```bash
    cp .env.example .env.local
-   # Edit .env.local with your configuration
+   # Edit .env.local with your educational configuration
    ```
 
-4. **Run the development server**:
+4. **Start learning environment**:
    ```bash
    npm run dev
    ```
 
-5. **Open your browser**:
-   Navigate to `http://localhost:3000`
+5. **Begin learning**:
+   Navigate to `http://localhost:3000` and start exploring LSTs!
 
-## 🔧 Configuration Guide
+## 🔧 Educational Configuration Guide
 
-### 1. Create RSOL Token Mint
+### 1. Create Demo RSOL Token Mint
 
 ```bash
-# Use Solana CLI to create token mint
+# Use Solana CLI to create educational token
 spl-token create-token --decimals 9
-# Copy the mint address to TOKEN_MINT_ADDRESS
+# Copy the mint address for educational demos
 ```
 
-### 2. Set Up Platform Wallet
+### 2. Set Up Educational Platform Wallet
 
 ```bash
-# Generate new keypair for platform wallet
-solana-keygen new --outfile platform-wallet.json
-# Export private key in base58 format for WALLET_PRIVATE_KEY
+# Generate new keypair for demo wallet
+solana-keygen new --outfile educational-wallet.json
+# Export private key for educational environment
 ```
 
-### 3. Configure Helius Webhook
+### 3. Configure Educational Webhooks
 
-1. **Create webhook** at [helius.dev](https://helius.dev)
+1. **Create educational webhook** at [helius.dev](https://helius.dev)
 2. **Set webhook URL**: `https://yourdomain.com/api/webhook`
-3. **Monitor addresses**: Add your platform wallet address
-4. **Transaction types**: Enable "TRANSFER" events
-5. **Test webhook**: Send test transaction
+3. **Monitor demo addresses**: Add your platform wallet address
+4. **Transaction types**: Enable "TRANSFER" events for learning
+5. **Test webhook**: Send educational test transaction
 
-### 4. Set Up Alchemy RPC
+### 4. Set Up Educational RPC Access
 
 1. **Create account** at [alchemy.com](https://alchemy.com)
-2. **Create Solana app** for devnet
-3. **Copy RPC URL** to `NEXT_PUBLIC_ALCHEMY_DEVNET_ENDPOINT`
+2. **Create Solana app** for devnet (educational use)
+3. **Copy RPC URL** to educational environment variables
 
-## 🧪 Testing Guide
+## 🧪 Learning & Testing Guide
 
-### Local Testing
+### For Students & Learners
 
-1. **Test Wallet Connection**:
-   ```bash
-   # Ensure wallet is on devnet
-   # Check wallet has devnet SOL
-   ```
+1. **Start with Visual Learning**:
+   - Navigate to landing page to understand LSTs
+   - Read through explanations before trying demos
+   - Use sliders to see live calculations
 
-2. **Test Staking Flow**:
-   - Navigate to `/LST`
-   - Connect wallet
-   - Select ratio (start with 1.0x)
-   - Stake small amount (0.1 SOL)
-   - Monitor webhook events on `/monitor`
+2. **Practice Safe Staking**:
+   - Navigate to `/LST` educational demo
+   - Connect wallet to devnet (free test tokens)
+   - Start with small amounts (0.1 SOL)
+   - Experiment with different yield percentages
+   - Watch the monitor page to see real transaction data
 
-3. **Test Unstaking Flow**:
-   - Navigate to `/unstake`
-   - Check RSOL balance
-   - Select unstaking amount
-   - Complete two-step process
-   - Verify SOL received
+3. **Learn Unstaking Process**:
+   - Navigate to `/unstake` educational demo
+   - Check your RSOL balance from previous staking
+   - Try different yield scenarios
+   - Complete the burn process to understand LST redemption
 
-### API Testing
+### For Educators & Developers
 
 ```bash
-# Test webhook endpoint
+# Test educational webhook endpoint
 curl -X POST http://localhost:3000/api/webhook \
   -H "Content-Type: application/json" \
-  -d @sample-webhook.json
+  -d @educational-webhook-sample.json
 
-# Test balance endpoint
-curl "http://localhost:3000/api/rsol-balance?wallet=YOUR_WALLET_ADDRESS"
+# Check student balance for demos
+curl "http://localhost:3000/api/rsol-balance?wallet=STUDENT_WALLET_ADDRESS"
 
-# Test webhook events
+# Monitor educational transactions
 curl "http://localhost:3000/api/webhook-events"
 ```
 
@@ -404,55 +447,110 @@ npm run build
 - ✅ **Add request size limits** to prevent DoS
 - ✅ **Monitor webhook errors** and failures
 
-## 🐛 Troubleshooting
+## 🐛 Educational Troubleshooting
 
-### Common Issues
+### Common Learning Issues
 
-**1. Wallet Connection Failed**
+**1. "I don't understand LSTs" - Learning Support**
 ```bash
-# Solution:
-- Ensure wallet is set to devnet
-- Clear browser cache and cookies
-- Try different wallet adapter
-- Check wallet permissions
+# Solutions:
+- Start with the landing page explanations
+- Play with yield sliders before reading formulas
+- Watch the live calculations change
+- Try small test transactions to see the process
 ```
 
-**2. Transaction Already Processed**
+**2. "Yield calculations seem backwards" - Understanding Help**
 ```bash
-# Solution:
-- Wait 30 seconds between transactions
-- Use different SOL amounts
-- Clear browser cache
-- Restart wallet extension
+# Educational clarity:
+- Higher yield = platform takes more risk
+- Higher yield = less RSOL per SOL when staking
+- Higher yield = more SOL per RSOL when unstaking
+- Use sliders to see this relationship visually
 ```
 
-**3. RSOL Tokens Not Minted**
+**3. "Demo transactions failed" - Technical Learning**
 ```bash
-# Debug steps:
-1. Check webhook logs in /monitor page
-2. Verify webhook URL is correct
-3. Check platform wallet has mint authority
-4. Ensure TOKEN_MINT_ADDRESS is correct
-5. Check Helius webhook configuration
+# Educational debug steps:
+1. Check wallet is on Solana devnet
+2. Get free devnet SOL from faucets
+3. Start with small amounts (0.1 SOL)
+4. Clear browser cache if issues persist
+5. Check monitor page for transaction status
 ```
 
-**4. Unstaking Failed**
+**4. "Can't see my RSOL tokens" - Learning Support**
 ```bash
-# Debug steps:
-1. Check RSOL balance is sufficient
-2. Verify burn transaction succeeded
-3. Check platform wallet has SOL
-4. Review transaction signatures
+# Educational troubleshooting:
+1. Check if staking transaction completed on /monitor
+2. Verify you're looking at devnet, not mainnet
+3. Refresh wallet or check rsol-balance API
+4. Remember: this is educational devnet, not real tokens
 ```
 
-### Debug Commands
+### Learning Commands
 
 ```bash
-# Check Solana cluster
+# Check you're on educational devnet
 solana config get
 
-# Check wallet balance
-solana balance YOUR_WALLET_ADDRESS
+# Check educational wallet balance  
+solana balance YOUR_WALLET_ADDRESS --url devnet
+
+# Get free educational devnet SOL
+solana airdrop 1 YOUR_WALLET_ADDRESS --url devnet
+```
+
+## 🤝 Contributing to Education
+
+### Ways to Contribute
+
+1. **Educational Content**:
+   - Improve explanations and tutorials
+   - Add more interactive learning elements
+   - Create video walkthroughs or guides
+   - Translate content for global learners
+
+2. **Technical Improvements**:
+   - Better error messages for learners
+   - Enhanced visual feedback
+   - Mobile-friendly educational interface
+   - Accessibility improvements
+
+3. **Learning Features**:
+   - Quiz components to test understanding
+   - More protocol examples and scenarios
+   - Advanced yield calculation examples
+   - Integration with other DeFi educational tools
+
+### How to Contribute
+
+1. **Fork the repository**
+2. **Create educational branch**:
+   ```bash
+   git checkout -b feature/educational-improvement
+   ```
+
+3. **Make learning-focused changes**:
+   - Focus on clarity and education
+   - Test with beginners
+   - Add helpful comments and explanations
+
+4. **Test educational experience**:
+   ```bash
+   npm run test
+   npm run build
+   ```
+5. **Submit pull request with educational focus**
+
+### Educational Contribution Areas
+
+- 📚 **Learning Content**: Better explanations and tutorials
+- 🎯 **User Experience**: Clearer interfaces for beginners  
+- 🎨 **Visual Learning**: Charts, diagrams, and animations
+- ⚡ **Interactive Features**: More hands-on learning elements
+- 🧪 **Educational Testing**: Scenarios for different skill levels
+- 📖 **Documentation**: Beginner-friendly guides and explanations
 
 # Check token accounts
 spl-token accounts
@@ -527,74 +625,95 @@ We welcome contributions to improve the RSOL platform! Here's how to get started
 - 🧪 **Testing**: Unit and integration tests
 - 📖 **Documentation**: API documentation and guides
 
-## 📋 Roadmap
+## 📋 Educational Roadmap
 
-### Phase 1: Core Platform ✅
-- [x] Basic staking/unstaking functionality
-- [x] Webhook integration
-- [x] Ratio-based conversions
-- [x] Transaction monitoring
+### Phase 1: Core Learning Platform ✅
+- [x] Educational landing page with LST explanations
+- [x] Interactive yield-based staking demos
+- [x] Step-by-step unstaking learning process
+- [x] Real-time transaction monitoring for education
+- [x] Safe devnet environment for risk-free learning
 
-### Phase 2: Enhanced Features 🚧
-- [ ] Reward distribution system
-- [ ] Governance token integration
-- [ ] Advanced analytics dashboard
-- [ ] Mobile-responsive improvements
+### Phase 2: Enhanced Learning Features 🚧
+- [ ] Interactive quizzes to test LST understanding
+- [ ] Video tutorials and guided walkthroughs
+- [ ] Comparison tools for different LST protocols
+- [ ] Mobile-friendly educational interface
+- [ ] Multi-language support for global learners
 
-### Phase 3: Advanced Features 🔮
-- [ ] Multi-token support
-- [ ] Cross-chain bridging
-- [ ] Automated rebalancing
-- [ ] Yield farming integration
+### Phase 3: Advanced Educational Tools 🔮
+- [ ] Gamified learning with achievements and progress tracking
+- [ ] LST protocol comparison dashboard
+- [ ] Integration with other DeFi educational platforms
+- [ ] Advanced scenarios: slashing, MEV, governance
+- [ ] Community learning features and discussions
 
-## 📚 Additional Resources
+## 📚 Educational Resources & References
 
-### Solana Development
-- [Solana Docs](https://docs.solana.com/)
-- [SPL Token Guide](https://spl.solana.com/token)
-- [Token-2022 Documentation](https://spl.solana.com/token-2022)
+### Learning About LSTs
+- [Solana Liquid Staking Overview](https://docs.solana.com/staking)
+- [Understanding Liquid Staking Tokens](https://marinade.finance/blog/what-are-liquid-staking-tokens/)
+- [LST Risks and Benefits Guide](https://solana.com/news/liquid-staking-guide)
 
-### Wallet Integration
-- [Wallet Adapter Guide](https://github.com/solana-labs/wallet-adapter)
-- [Phantom Developer Docs](https://docs.phantom.app/)
+### Blockchain Development Learning
+- [Solana Development Course](https://docs.solana.com/developing/programming-model/overview)
+- [SPL Token Educational Guide](https://spl.solana.com/token)
+- [Token-2022 Learning Documentation](https://spl.solana.com/token-2022)
 
-### Webhook Services
-- [Helius Documentation](https://docs.helius.dev/)
-- [Webhook Best Practices](https://webhook.site/best-practices)
+### Educational Wallet Integration
+- [Wallet Adapter Educational Guide](https://github.com/solana-labs/wallet-adapter)
+- [Phantom Educational Setup](https://docs.phantom.app/)
+- [Using Devnet for Safe Learning](https://docs.solana.com/clusters)
 
-### Next.js Resources
-- [Next.js 15 Documentation](https://nextjs.org/docs)
-- [App Router Guide](https://nextjs.org/docs/app)
+### Educational Webhook Learning
+- [Helius Educational Documentation](https://docs.helius.dev/)
+- [Understanding Webhooks for Learning](https://webhook.site/best-practices)
+- [Real-time Transaction Monitoring Guide](https://docs.helius.dev/webhooks)
 
-## 🙏 Acknowledgments
+### Educational Web Development
+- [Next.js 15 Learning Resources](https://nextjs.org/docs)
+- [React 19 Educational Features](https://react.dev/learn)
+- [TypeScript for Educational Projects](https://www.typescriptlang.org/docs/)
 
-- **Solana Foundation** - For the robust blockchain infrastructure
-- **Helius** - For reliable webhook services
-- **Alchemy** - For high-performance RPC endpoints
-- **Vercel** - For seamless deployment platform
+## 🙏 Educational Acknowledgments
+
+- **Solana Foundation** - For providing a robust educational blockchain platform
+- **Helius** - For reliable webhook services that make real-time learning possible  
+- **Alchemy** - For high-performance RPC endpoints supporting educational demos
+- **Educational Community** - For feedback and suggestions on learning experience
+- **Open Source Contributors** - For making blockchain education accessible
 
 ## 📄 License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This educational project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## 🆘 Support & Community
+## 🆘 Educational Support & Learning Community
 
-### Get Help
+### Get Learning Support
 
-- **GitHub Issues**: Report bugs and request features
-- **Discord**: Join our community server
-- **Documentation**: Check this README and inline comments
-- **Email**: Contact the development team
+- **GitHub Issues**: Report learning obstacles and suggest educational improvements
+- **Educational Discussions**: Join our learning-focused community discussions
+- **Documentation**: This comprehensive educational README and inline learning comments
+- **Learning Path**: Follow the step-by-step educational journey from basic to advanced
 
-### Quick Links
+### Educational Quick Links
 
-- 🌐 **Live Demo**: [https://lst-sample.rahullalwani.com](https://lst-sample.rahullalwani.com)
-- 📖 **Documentation**: This README
-- 🐛 **Bug Reports**: GitHub Issues
-- 💡 **Feature Requests**: GitHub Discussions
+- 🌐 **Educational Demo**: [https://lst-sample.rahullalwani.com](https://lst-sample.rahullalwani.com)
+- 📖 **Learning Documentation**: This educational README  
+- 🐛 **Learning Issues**: GitHub Issues for educational improvements
+- 💡 **Educational Ideas**: GitHub Discussions for learning enhancement suggestions
+- 📚 **Learning Resources**: Comprehensive links to external educational materials
+
+### Learning Objectives Achieved
+
+✅ **Understanding LST Fundamentals**: Clear explanations of liquid staking concepts
+✅ **Interactive Learning**: Hands-on experience with yield sliders and live calculations  
+✅ **Safe Practice Environment**: Risk-free devnet transactions for learning
+✅ **Real-world Application**: Authentic LST protocol mathematics and processes
+✅ **Developer Education**: Complete codebase for studying LST implementation
 
 ---
 
-**Built with ❤️ for the Solana ecosystem**
+**Built with ❤️ for blockchain education and the Solana learning community**
 
-*Last updated: August 2025*
+*Educational Platform - Empowering the next generation of DeFi developers*
